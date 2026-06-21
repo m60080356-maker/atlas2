@@ -304,6 +304,20 @@ color:white;
     }
   };
 
+  window.sendMessage = async () => {
+    const input = document.getElementById('chat-input'); // مطمئن شو ID اینپوت درست است
+    const text = input.value.trim();
+    
+    if (!text) return;
+    
+    input.value = ''; // خالی کردن اینپوت بعد از ارسال
+    
+    // اینجا کد مربوط به نمایش پیام در صفحه و فرستادن به AI را قرار بده
+    // و در نهایت از تابع ذخیره‌سازی که داری استفاده کن:
+    // await window.saveMsg(text, "پاسخ هوش مصنوعی");
+};
+
+
   window.loadHistory = async function () {
     console.log("✅ Patched loadHistory() اجرا شد");
 
