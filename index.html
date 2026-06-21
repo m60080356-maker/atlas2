@@ -1,0 +1,421 @@
+﻿<!DOCTYPE html>
+<html lang="fa">
+<head>
+<!-- ATLAS SEARCH ENGINE OPTIMIZATION & VERIFICATION -->
+<title>اطلس 1 | هوش مصنوعی پیشرفته فارسی</title>
+<meta name="description" content="اطلس 1 (Atlas) - هوشمندترین دستیار هوش مصنوعی فارسی برای چت، تولید تصویر و جستجو.">
+<meta name="google-site-verification" content="NYh-SOYeH_-ZN037ftODuCtN4oC-ljIhHDxGTdGZdrQ" />
+<link rel="canonical" href="https://m60080356-maker.github.io/atlas1/" />
+<!-- END SEO -->
+
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:system-ui;
+}
+
+body{
+background:#050505;
+color:white;
+height:100vh;
+display:flex;
+flex-direction:column;
+}
+
+header{
+padding:14px;
+text-align:center;
+font-size:20px;
+font-weight:bold;
+background:linear-gradient(90deg,#ff00ff,#00ffff,#00ff88);
+background-size:300% 300%;
+animation:rgbMove 6s infinite linear;
+-webkit-background-clip:text;
+color:transparent;
+}
+
+@keyframes rgbMove{
+0%{background-position:0%}
+50%{background-position:100%}
+100%{background-position:0%}
+}
+
+#chat{
+flex:1;
+overflow:auto;
+padding:16px;
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.msg{
+max-width:80%;
+padding:12px 14px;
+border-radius:14px;
+line-height:1.5;
+}
+
+.user{
+align-self:flex-end;
+background:linear-gradient(135deg,#00ffff,#0066ff);
+}
+
+.bot{
+align-self:flex-start;
+background:linear-gradient(135deg,#ff00ff,#ff6600);
+}
+
+#inputArea{
+display:flex;
+gap:8px;
+padding:12px;
+background:#0c0c0c;
+border-top:1px solid #222;
+}
+
+#msgInput{
+flex:1;
+padding:12px;
+border-radius:10px;
+border:none;
+outline:none;
+background:#111;
+color:white;
+}
+
+button{
+padding:12px 16px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+background:linear-gradient(135deg,#ff00ff,#00ffff);
+color:black;
+font-weight:bold;
+}
+
+button:hover{
+opacity:0.9;
+}
+
+#auth{
+display:flex;
+flex-direction:column;
+gap:10px;
+padding:20px;
+}
+
+#auth input{
+padding:10px;
+border-radius:8px;
+border:none;
+background:#111;
+color:white;
+}
+</style>
+</head>
+
+<body>
+
+<header>ATLAS AI</header>
+
+<div id="auth">
+<input id="email" placeholder="email">
+<input id="password" type="password" placeholder="password">
+<button onclick="login()">Login / SignUp</button>
+</div>
+
+<div id="chat" style="display:none"></div>
+
+<div id="inputArea" style="display:none">
+<input id="msgInput" placeholder="پیام بنویس...">
+<button onclick="send()">ارسال</button>
+</div>
+
+<!-- ATLAS FINAL SAFE AUTH PATCH - DO NOT REMOVE OLD CODE -->
+<script>
+(function () {
+  console.log("✅ ATLAS FINAL SAFE AUTH PATCH LOADED");
+
+  let atlasSafeClient = null;
+
+  function getSafeSupabaseConfig() {
+    let url = "";
+    let key = "";
+
+    try {
+      if (typeof SUPABASE_URL !== "undefined") {
+        url = SUPABASE_URL;
+      }
+    } catch (e) {}
+
+    try {
+      if (typeof SUPABASE_ANON_KEY !== "undefined") {
+        key = SUPABASE_ANON_KEY;
+      }
+    } catch (e) {}
+
+    if (!url) {
+      url = "https://atjzqpaxdyywdwidyvvz.supabase.co";
+    }
+
+    if (!key) {
+      key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0anpxcGF4ZHl5eXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MTgzNzYsImV4cCI6MjA5NzQ5NDM3Nn0.xfUqnGj4rByYD3ujeSNQpxpczhNZ2453FrWJ7IeY_3A";
+    }
+
+    return { url, key };
+  }
+
+  function getAtlasSafeClient() {
+    if (atlasSafeClient && atlasSafeClient.auth) {
+      return atlasSafeClient;
+    }
+
+    if (!window.supabase) {
+      console.error("❌ window.supabase وجود ندارد. CDN لود نشده.");
+      alert("Supabase library لود نشده. اینترنت یا CDN را بررسی کن.");
+      return null;
+    }
+
+    if (typeof window.supabase.createClient !== "function") {
+      console.error("❌ window.supabase.createClient وجود ندارد.");
+      console.log("window.supabase فعلی:", window.supabase);
+      alert("Supabase SDK درست لود نشده.");
+      return null;
+    }
+
+    const cfg = getSafeSupabaseConfig();
+
+    if (!cfg.key || cfg.key.includes("اینجا_کلید")) {
+      console.error("❌ SUPABASE_ANON_KEY پیدا نشد.");
+      alert("کلید Supabase ANON KEY پیدا نشد. باید داخل فایل باشد.");
+      return null;
+    }
+
+    atlasSafeClient = window.supabase.createClient(cfg.url, cfg.key);
+
+    window.atlasSafeClient = atlasSafeClient;
+
+    console.log("✅ Supabase client ساخته شد:", atlasSafeClient);
+
+    return atlasSafeClient;
+  }
+
+  function showAppAfterLogin() {
+    const auth = document.getElementById("auth");
+    const chat = document.getElementById("chat");
+    const inputArea = document.getElementById("inputArea");
+
+    if (auth) auth.style.display = "none";
+    if (chat) chat.style.display = "flex";
+    if (inputArea) inputArea.style.display = "flex";
+  }
+
+  function getEmailPassword() {
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+
+    const email = emailInput ? emailInput.value.trim() : "";
+    const password = passwordInput ? passwordInput.value.trim() : "";
+
+    return { email, password };
+  }
+
+  window.login = async function () {
+    console.log("✅ Patched login() اجرا شد");
+
+    const client = getAtlasSafeClient();
+
+    if (!client) {
+      console.error("❌ client ساخته نشد");
+      return;
+    }
+
+    const { email, password } = getEmailPassword();
+
+    if (!email || !password) {
+      alert("ایمیل و رمز عبور را وارد کن");
+      return;
+    }
+
+    try {
+      let result = await client.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if (result.error) {
+        console.warn("⚠️ ورود ناموفق بود، تلاش برای ثبت‌نام:", result.error.message);
+
+        const signupResult = await client.auth.signUp({
+          email: email,
+          password: password
+        });
+
+        if (signupResult.error) {
+          console.error("❌ Signup error:", signupResult.error);
+          alert("خطا در ورود/ثبت‌نام: " + signupResult.error.message);
+          return;
+        }
+
+        if (!signupResult.data.session) {
+          alert("ثبت‌نام انجام شد. اگر تأیید ایمیل فعال است، ایمیلت را تأیید کن و دوباره Login بزن.");
+          return;
+        }
+
+        result = signupResult;
+      }
+
+      const loggedUser =
+        result.data &&
+        (
+          result.data.user ||
+          (result.data.session && result.data.session.user)
+        );
+
+      if (!loggedUser) {
+        console.error("❌ کاربر از Supabase برنگشت:", result);
+        alert("ورود انجام نشد. احتمالاً تأیید ایمیل لازم است.");
+        return;
+      }
+
+      window.user = loggedUser;
+      window.currentUser = loggedUser;
+
+      console.log("✅ Login successful:", loggedUser);
+
+      showAppAfterLogin();
+
+      if (typeof window.loadHistory === "function") {
+        await window.loadHistory();
+      }
+
+    } catch (err) {
+      console.error("❌ LOGIN FINAL PATCH ERROR:", err);
+      alert("خطا در ورود: " + (err && err.message ? err.message : err));
+    }
+  };
+
+  window.loadHistory = async function () {
+    console.log("✅ Patched loadHistory() اجرا شد");
+
+    const client = getAtlasSafeClient();
+
+    if (!client) return;
+
+    const activeUser = window.user || window.currentUser;
+
+    if (!activeUser || !activeUser.id) {
+      console.warn("⚠️ کاربر برای loadHistory موجود نیست");
+      return;
+    }
+
+    try {
+      const { data, error } = await client
+        .from("messages")
+        .select("*")
+        .eq("user_id", activeUser.id)
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("❌ loadHistory error:", error);
+        return;
+      }
+
+      if (!Array.isArray(data)) return;
+
+      const chat = document.getElementById("chat");
+
+      if (chat) {
+        chat.innerHTML = "";
+      }
+
+      data.forEach(function (m) {
+        if (typeof window.addMsg === "function") {
+          window.addMsg(m.text, m.role);
+        } else if (chat) {
+          const div = document.createElement("div");
+          div.className = "msg " + m.role;
+          div.textContent = m.text;
+          chat.appendChild(div);
+        }
+      });
+
+    } catch (err) {
+      console.error("❌ LOAD HISTORY FINAL PATCH ERROR:", err);
+    }
+  };
+
+  window.saveMsg = async function (role, text) {
+    console.log("✅ Patched saveMsg() اجرا شد");
+
+    const client = getAtlasSafeClient();
+
+    if (!client) return;
+
+    const activeUser = window.user || window.currentUser;
+
+    if (!activeUser || !activeUser.id) {
+      console.warn("⚠️ کاربر برای saveMsg موجود نیست");
+      return;
+    }
+
+    try {
+      const { error } = await client.from("messages").insert({
+        user_id: activeUser.id,
+        role: role,
+        text: text
+      });
+
+      if (error) {
+        console.error("❌ saveMsg error:", error);
+      }
+
+    } catch (err) {
+      console.error("❌ SAVE MSG FINAL PATCH ERROR:", err);
+    }
+  };
+
+  window.addEventListener("load", async function () {
+    console.log("✅ بررسی session قبلی");
+
+    const client = getAtlasSafeClient();
+
+    if (!client) return;
+
+    try {
+      const { data, error } = await client.auth.getSession();
+
+      if (error) {
+        console.error("❌ getSession error:", error);
+        return;
+      }
+
+      if (data && data.session && data.session.user) {
+        window.user = data.session.user;
+        window.currentUser = data.session.user;
+
+        console.log("✅ Session restored:", window.user);
+
+        showAppAfterLogin();
+
+        if (typeof window.loadHistory === "function") {
+          await window.loadHistory();
+        }
+      }
+
+    } catch (err) {
+      console.error("❌ SESSION CHECK ERROR:", err);
+    }
+  });
+
+})();
+</script>
+<!-- END ATLAS FINAL SAFE AUTH PATCH -->
+
+
+</body>
+</html>
