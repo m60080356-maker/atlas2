@@ -1195,6 +1195,53 @@
         input.disabled = false;
     }
 } 
+  async function generateImage() {
+  const input = document.getElementById("prompt"); // یا نام آیدی ورودی متن شما
+  const prompt = input.value.trim();
+  
+  if (!prompt) {
+    alert("لطفاً ابتدا توصیف تصویر را بنویسید.");
+    return;
+  }
+
+  // نمایش پیام در حال بارگذاری
+  const tempMsg = addMsg("در حال ساخت تصویر... 🎨", "bot");
+  input.value = "";
+
+  try {
+    const client = getAtlasSafeClient(); // تابع کلاینت شما
+    const { data, error } = await client.functions.invoke('atlas-image', {
+      body: { prompt: prompt }
+    });
+
+    if (error) throw error;
+
+    // حذف پیام "در حال ساخت" و نمایش تصویر
+    tempMsg.remove();
+    addImageMsg(data.url, "bot");
+    
+  } catch (err) {
+    tempMsg.textContent = "خطا در تولید تصویر: " + (err.message || "خطای نامشخص");
+    console.error(err);
+  }
+}
+
+// تابع کمکی برای نمایش تصویر بدون تغییر در addMsg اصلی
+function addImageMsg(url, role = "bot") {
+  const chat = document.getElementById("chat");
+  const msg = document.createElement("div");
+  msg.className = `msg ${role}`;
+  
+  const img = document.createElement("img");
+  img.src = url;
+  img.style.maxWidth = "100%";
+  img.style.borderRadius = "10px";
+  img.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
+  
+  msg.appendChild(img);
+  chat.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
+}
   </script>
 </body>
 </html>
