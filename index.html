@@ -585,6 +585,8 @@
               autocomplete="off"
               onkeydown="handleInputKey(event)"
             />
+            <!-- دکمه جدید برای تصویر -->
+            <button id="imgBtn" onclick="generateImage()" style="background: #ff00ff; color: #fff;">🎨</button>
             <button class="send-btn" onclick="send()" title="ارسال">➤</button>
           </div>
         </div>
@@ -1162,6 +1164,37 @@
 
     resizeCanvas();
     animateSpace();
+  async function generateImage() {
+    const input = document.getElementById('msgInput'); // مطمئن شو آی‌دی درست است
+    const prompt = input.value.trim();
+    if (!prompt) return alert("لطفاً توصیف تصویر را بنویسید!");
+
+    window.addMsg("در حال تولید تصویر: " + prompt, 'user');
+    const originalPlaceholder = input.placeholder;
+    input.value = '';
+    input.placeholder = "لطفاً صبر کنید...";
+    input.disabled = true;
+
+    try {
+        // فراخوانی Edge Function از طریق کلاینت Supabase
+        const { data, error } = await client.functions.invoke('atlas-image', {
+            body: { prompt: prompt }
+        });
+
+        if (error) throw error;
+
+        if (data && data.data && data.data[0].b64_json) {
+            const imgUrl = "data:image/png;base64," + data.data[0].b64_json;
+            window.addMsg(`<img src="${imgUrl}" style="width:100%; border-radius:10px; margin-top:10px;" />`, 'bot');
+        }
+    } catch (err) {
+        console.error("Image Error:", err);
+        window.addMsg("خطا در تولید تصویر. لطفاً دوباره تلاش کنید.", 'bot');
+    } finally {
+        input.placeholder = originalPlaceholder;
+        input.disabled = false;
+    }
+} 
   </script>
 </body>
 </html>
