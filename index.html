@@ -1253,6 +1253,98 @@ function addImageMsg(url, role = "bot") {
   chat.appendChild(msg);
   chat.scrollTop = chat.scrollHeight;
 }
-  </script>
+window.login = async function () {
+  try {
+    const emailInput =
+      document.getElementById("email") ||
+      document.getElementById("loginEmail") ||
+      document.querySelector('input[type="email"]');
+
+    const passwordInput =
+      document.getElementById("password") ||
+      document.getElementById("loginPassword") ||
+      document.querySelector('input[type="password"]');
+
+    if (!emailInput || !passwordInput) {
+      alert("فیلد ایمیل یا رمز عبور پیدا نشد.");
+      return;
+    }
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (!email || !password) {
+      alert("ایمیل و رمز عبور را وارد کن.");
+      return;
+    }
+
+    if (!window.client && typeof client === "undefined") {
+      alert("اتصال Supabase پیدا نشد.");
+      return;
+    }
+
+    const supabaseClient = window.client || client;
+
+    let { data, error } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      const signup = await supabaseClient.auth.signUp({
+        email,
+        password
+      });
+
+      data = signup.data;
+      error = signup.error;
+    }
+
+    if (error) {
+      alert("خطا در ورود یا ثبت‌نام: " + error.message);
+      console.error("Login error:", error);
+      return;
+    }
+
+    alert("ورود موفق بود.");
+
+    console.log("Auth data:", data);
+
+    if (typeof showApp === "function") {
+      showApp();
+    }
+
+    if (typeof loadUserData === "function") {
+      loadUserData();
+    }
+
+  } catch (err) {
+    console.error("Login fatal error:", err);
+    alert("خطای غیرمنتظره در ورود.");
+  }
+};
+
+window.logout = async function () {
+  try {
+    if (!window.client && typeof client === "undefined") {
+      alert("اتصال Supabase پیدا نشد.");
+      return;
+    }
+
+    const supabaseClient = window.client || client;
+
+    await supabaseClient.auth.signOut();
+
+    alert("خارج شدی.");
+
+    location.reload();
+
+  } catch (err) {
+    console.error("Logout error:", err);
+    alert("خطا در خروج از حساب.");
+  }
+};
+</script>
+
 </body>
 </html>
