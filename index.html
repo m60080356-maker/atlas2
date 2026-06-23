@@ -730,45 +730,33 @@
       msg.textContent = text;
       chat.appendChild(msg);
       chat.scrollTop = chat.scrollHeight;
-    }
-
- window.login = async function login() {
+      window.login = async function login() {
   try {
-    // ۱. گرفتن اتصال Supabase
     let client;
-    if (typeof getAtlasSafeClient === "function") {
+    
+    // ۱. چک کردن متغیر عمومی supabase (اگر از CDN استفاده کردی)
+    if (window.supabase) {
+        client = window.supabase;
+    }
+    // ۲. روش قبلی خودت
+    else if (typeof getAtlasSafeClient === "function") {
       client = getAtlasSafeClient();
-    } else if (window.client) {
+    } 
+    // ۳. چک کردن متغیر window.client
+    else if (window.client) {
       client = window.client;
     }
 
+    // دیباگ: اگر باز هم پیدا نشد، در کنسول مرورگر لاگ می‌اندازیم
     if (!client) {
-      alert("خطا: سیستم قادر به برقراری ارتباط با دیتابیس نیست.");
+      console.log("Supabase Client check failed:");
+      console.log("Is window.supabase defined?", !!window.supabase);
+      console.log("Is getAtlasSafeClient a function?", typeof getAtlasSafeClient);
+      alert("اتصال Supabase پیدا نشد. لطفاً کنسول مرورگر را چک کنید.");
       return;
     }
-
-    // ۲. گرفتن مقادیر ایمیل و رمز عبور
-    const emailInput = document.getElementById("email") || document.getElementById("loginEmail");
-    const passwordInput = document.getElementById("password") || document.getElementById("loginPassword");
-
-    if (!emailInput || !passwordInput) {
-      alert("فیلدهای ورود پیدا نشدند.");
-      return;
-    }
-
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
-
-    if (!email || !password) {
-      alert("لطفاً ایمیل و رمز عبور را وارد کنید.");
-      return;
-    }
-
-    // ۳. تلاش برای ورود
-    let { data, error } = await client.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
+    
+    // ادامه کد بقیه ...
 
     // ۴. اگر کاربر وجود نداشت، تلاش برای ثبت‌نام (اختیاری - بر اساس منطق قبلی شما)
     if (error) {
