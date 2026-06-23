@@ -1,1392 +1,423 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta name="google-site-verification" content="HTvYztTztqEIahskEYErq7mh0QlDY19aKHCwZKlEzl0" />" />
+  <meta name="google-site-verification" content="HTvYztTztqEIahskEYErq7mh0QlDY19aKHCwZKlEzl0" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ATLAS AI</title>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     :root {
-      --bg: #050505;
-      --panel: rgba(14, 14, 18, 0.86);
-      --panel-strong: rgba(18, 18, 24, 0.96);
-      --border: rgba(255, 255, 255, 0.09);
-      --text: #ffffff;
-      --muted: rgba(255, 255, 255, 0.62);
-      --soft: rgba(255, 255, 255, 0.08);
-      --accent: #7c3aed;
-      --accent-2: #06b6d4;
-      --danger: #ef4444;
-      --user: linear-gradient(135deg, #2563eb, #7c3aed);
-      --bot: linear-gradient(135deg, #1f2937, #111827);
+      --bg: #050505; --panel: rgba(14, 14, 18, 0.86); --panel-strong: rgba(18, 18, 24, 0.96);
+      --border: rgba(255, 255, 255, 0.09); --text: #ffffff; --muted: rgba(255, 255, 255, 0.62);
+      --soft: rgba(255, 255, 255, 0.08); --accent: #7c3aed; --accent-2: #06b6d4;
+      --danger: #ef4444; --user: linear-gradient(135deg, #2563eb, #7c3aed); --bot: linear-gradient(135deg, #1f2937, #111827);
     }
-
     body.light {
-      --bg: #f5f5f7;
-      --panel: rgba(255, 255, 255, 0.82);
-      --panel-strong: rgba(255, 255, 255, 0.96);
-      --border: rgba(0, 0, 0, 0.1);
-      --text: #101014;
-      --muted: rgba(0, 0, 0, 0.58);
-      --soft: rgba(0, 0, 0, 0.06);
-      --bot: linear-gradient(135deg, #ffffff, #f2f2f5);
+      --bg: #f5f5f7; --panel: rgba(255, 255, 255, 0.82); --panel-strong: rgba(255, 255, 255, 0.96);
+      --border: rgba(0, 0, 0, 0.1); --text: #101014; --muted: rgba(0, 0, 0, 0.58);
+      --soft: rgba(0, 0, 0, 0.06); --bot: linear-gradient(135deg, #ffffff, #f2f2f5);
     }
-
-    html,
-    body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Arial, Tahoma, sans-serif;
-    }
-
-    #grokCanvas {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      background: radial-gradient(circle at center, #111827 0%, #050505 55%, #000 100%);
-    }
-
-    .app-shell {
-      position: relative;
-      z-index: 2;
-      width: 100%;
-      height: 100vh;
-      display: flex;
-      flex-direction: row;
-      backdrop-filter: blur(0px);
-    }
-
-    .main-chat {
-      flex: 1;
-      min-width: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background: linear-gradient(
-        180deg,
-        rgba(5, 5, 8, 0.38),
-        rgba(5, 5, 8, 0.72)
-      );
-    }
-
-    .topbar {
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 18px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(5, 5, 8, 0.42);
-      backdrop-filter: blur(16px);
-    }
-
-    .top-left {
-      direction: ltr;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .model-pill {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 9px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--soft);
-      color: var(--text);
-      font-size: 14px;
-      cursor: default;
-    }
-
-    .model-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      box-shadow: 0 0 16px rgba(124, 58, 237, 0.9);
-    }
-
-    .top-action {
-      border: 1px solid var(--border);
-      background: var(--soft);
-      color: var(--text);
-      border-radius: 999px;
-      padding: 9px 12px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .top-action:hover {
-      background: rgba(255, 255, 255, 0.14);
-    }
-
-    .brand {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 2px;
-    }
-
-    .brand-title {
-      font-weight: 800;
-      letter-spacing: 1px;
-      background: linear-gradient(90deg, #fff, #9ca3af, #fff);
-      background-size: 200%;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      animation: shine 4s linear infinite;
-    }
-
-    .brand-subtitle {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    @keyframes shine {
-      0% {
-        background-position: 0%;
-      }
-      100% {
-        background-position: 200%;
-      }
-    }
-
-    .content {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #auth {
-      width: min(420px, calc(100% - 32px));
-      margin: auto;
-      padding: 22px;
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      background: var(--panel);
-      backdrop-filter: blur(18px);
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .auth-title {
-      margin: 0 0 8px;
-      font-size: 24px;
-      text-align: center;
-    }
-
-    .auth-desc {
-      margin: 0 0 12px;
-      color: var(--muted);
-      text-align: center;
-      font-size: 14px;
-      line-height: 1.8;
-    }
-
-    #auth input,
-    #msgInput {
-      width: 100%;
-      border: 1px solid var(--border);
-      outline: none;
-      background: rgba(255, 255, 255, 0.07);
-      color: var(--text);
-      border-radius: 14px;
-      padding: 13px 14px;
-      font-size: 15px;
-    }
-
-    #auth input::placeholder,
-    #msgInput::placeholder {
-      color: var(--muted);
-    }
-
-    button {
-      font-family: inherit;
-    }
-
-    .primary-btn {
-      border: none;
-      border-radius: 14px;
-      padding: 13px 16px;
-      color: white;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      cursor: pointer;
-      font-weight: 700;
-      transition: 0.2s;
-    }
-
-    .primary-btn:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.06);
-    }
-
-    #chat {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      padding: 24px;
-      display: none;
-      flex-direction: column;
-      gap: 14px;
-      scroll-behavior: smooth;
-    }
-
-    .welcome {
-      width: min(720px, 100%);
-      margin: auto;
-      text-align: center;
-      color: var(--text);
-      padding: 28px;
-      border-radius: 26px;
-      border: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.045);
-      backdrop-filter: blur(12px);
-    }
-
-    .welcome h1 {
-      margin: 0 0 10px;
-      font-size: clamp(28px, 5vw, 46px);
-    }
-
-    .welcome p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.9;
-    }
-
-    .msg {
-      max-width: min(760px, 82%);
-      padding: 13px 15px;
-      border-radius: 18px;
-      line-height: 1.85;
-      white-space: pre-wrap;
-      word-break: break-word;
-      border: 1px solid var(--border);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
-      animation: pop 0.18s ease-out;
-    }
-
-    @keyframes pop {
-      from {
-        opacity: 0;
-        transform: translateY(6px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .msg.user {
-      align-self: flex-end;
-      background: var(--user);
-      color: white;
-      border-bottom-right-radius: 6px;
-    }
-
-    .msg.bot {
-      align-self: flex-start;
-      background: var(--bot);
-      color: var(--text);
-      border-bottom-left-radius: 6px;
-    }
-
-    .msg.system {
-      align-self: center;
-      max-width: 90%;
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--muted);
-      font-size: 13px;
-      text-align: center;
-    }
-
-    #inputArea {
-      display: none;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 18px 18px;
-      border-top: 1px solid var(--border);
-      background: rgba(5, 5, 8, 0.54);
-      backdrop-filter: blur(18px);
-    }
-
-    .input-wrap {
-      width: min(900px, 100%);
-      margin: 0 auto;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 8px;
-      background: var(--panel);
-    }
-
-    #msgInput {
-      border: none;
-      background: transparent;
-      border-radius: 14px;
-      padding: 12px;
-    }
-
-    .send-btn {
-      flex: 0 0 auto;
-      width: 46px;
-      height: 46px;
-      border-radius: 14px;
-      border: none;
-      cursor: pointer;
-      color: white;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      font-size: 18px;
-      transition: 0.2s;
-    }
-
-    .send-btn:hover {
-      transform: scale(1.04);
-    }
-
-    .sidebar {
-      width: 292px;
-      height: 100vh;
-      border-left: 1px solid var(--border);
-      background: var(--panel-strong);
-      backdrop-filter: blur(22px);
-      display: flex;
-      flex-direction: column;
-      padding: 14px;
-      gap: 12px;
-    }
-
-    .sidebar-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .sidebar-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .logo-mark {
-      width: 34px;
-      height: 34px;
-      display: grid;
-      place-items: center;
-      border-radius: 12px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      box-shadow: 0 0 25px rgba(124, 58, 237, 0.5);
-      font-weight: 900;
-    }
-
-    .sidebar-name {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .sidebar-name strong {
-      font-size: 15px;
-    }
-
-    .sidebar-name span {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .side-btn {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 10px;
-      border: 1px solid transparent;
-      border-radius: 14px;
-      background: transparent;
-      color: var(--text);
-      padding: 12px;
-      text-align: right;
-      cursor: pointer;
-      transition: 0.18s;
-      font-size: 14px;
-    }
-
-    .side-btn:hover {
-      background: var(--soft);
-      border-color: var(--border);
-    }
-
-    .side-btn.active {
-      background: rgba(124, 58, 237, 0.16);
-      border-color: rgba(124, 58, 237, 0.35);
-    }
-
-    .side-btn.danger {
-      color: #fecaca;
-    }
-
-    .side-section-title {
-      margin: 10px 4px 2px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .history-list {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      padding-left: 2px;
-    }
-
-    .history-item {
-      border: 1px solid var(--border);
-      border-radius: 13px;
-      padding: 10px;
-      color: var(--muted);
-      background: rgba(255, 255, 255, 0.035);
-      font-size: 13px;
-      line-height: 1.6;
-      cursor: default;
-    }
-
-    .sidebar-footer {
-      border-top: 1px solid var(--border);
-      padding-top: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .user-chip {
-      padding: 10px;
-      border-radius: 14px;
-      background: var(--soft);
-      color: var(--muted);
-      font-size: 12px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .mobile-sidebar-toggle {
-      display: none;
-    }
-
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: Arial, Tahoma, sans-serif; }
+    #grokCanvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; background: radial-gradient(circle at center, #111827 0%, #050505 55%, #000 100%); }
+    .app-shell { position: relative; z-index: 2; width: 100%; height: 100vh; display: flex; flex-direction: row; }
+    .main-chat { flex: 1; min-width: 0; height: 100vh; display: flex; flex-direction: column; background: linear-gradient(180deg, rgba(5, 5, 8, 0.38), rgba(5, 5, 8, 0.72)); }
+    .topbar { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; border-bottom: 1px solid var(--border); background: rgba(5, 5, 8, 0.42); backdrop-filter: blur(16px); }
+    .top-left { direction: ltr; display: flex; align-items: center; gap: 10px; }
+    .model-pill { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--soft); font-size: 14px; }
+    .model-dot { width: 9px; height: 9px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 0 16px rgba(124, 58, 237, 0.9); }
+    .top-action { border: 1px solid var(--border); background: var(--soft); color: var(--text); border-radius: 999px; padding: 9px 12px; cursor: pointer; }
+    .brand { display: flex; flex-direction: column; align-items: flex-end; }
+    .brand-title { font-weight: 800; color: #fff; }
+    .brand-subtitle { font-size: 12px; color: var(--muted); }
+    .content { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    #auth { width: min(400px, 90%); margin: auto; padding: 25px; border: 1px solid var(--border); border-radius: 24px; background: var(--panel); backdrop-filter: blur(20px); display: flex; flex-direction: column; gap: 15px; }
+    #auth input, #msgInput { width: 100%; border: 1px solid var(--border); background: rgba(255, 255, 255, 0.07); color: var(--text); border-radius: 12px; padding: 12px; }
+    .primary-btn { border: none; border-radius: 12px; padding: 14px; color: white; background: linear-gradient(135deg, var(--accent), var(--accent-2)); cursor: pointer; font-weight: bold; }
+    #chat { flex: 1; overflow-y: auto; padding: 20px; display: none; flex-direction: column; gap: 15px; }
+    .msg { max-width: 85%; padding: 12px; border-radius: 15px; line-height: 1.6; word-break: break-word; }
+    .msg.user { align-self: flex-end; background: var(--user); color: white; }
+    .msg.bot { align-self: flex-start; background: var(--bot); border: 1px solid var(--border); }
+    #inputArea { display: none; padding: 15px; background: rgba(5, 5, 8, 0.5); }
+    .input-wrap { width: min(800px, 100%); margin: 0 auto; display: flex; gap: 10px; }
+    .sidebar { width: 280px; height: 100vh; border-left: 1px solid var(--border); background: var(--panel-strong); display: flex; flex-direction: column; padding: 15px; gap: 10px; }
     @media (max-width: 860px) {
-      .app-shell {
-        flex-direction: column;
-      }
-
-      .sidebar {
-        position: fixed;
-        top: 0;
-        right: 0;
-        z-index: 5;
-        transform: translateX(105%);
-        transition: 0.24s;
-        width: min(310px, 86vw);
-      }
-
-      body.sidebar-open .sidebar {
-        transform: translateX(0);
-      }
-
-      .mobile-sidebar-toggle {
-        display: inline-flex;
-      }
-
-      .topbar {
-        padding: 0 12px;
-      }
-
-      .brand-subtitle {
-        display: none;
-      }
-
-      #chat {
-        padding: 16px;
-      }
-
-      .msg {
-        max-width: 92%;
-      }
+      .sidebar { position: fixed; right: 0; transform: translateX(100%); transition: 0.3s; z-index: 100; }
+      body.sidebar-open .sidebar { transform: translateX(0); }
     }
   </style>
 </head>
-
 <body>
   <canvas id="grokCanvas"></canvas>
-
   <div class="app-shell">
     <main class="main-chat">
       <header class="topbar">
         <div class="brand">
           <div class="brand-title">ATLAS AI</div>
-          <div class="brand-subtitle">هوش مصنوعی شخصی شما</div>
         </div>
-
         <div class="top-left">
-          <button class="top-action mobile-sidebar-toggle" onclick="toggleSidebar()">☰</button>
-          <div class="model-pill">
-            <span class="model-dot"></span>
-            <span>Atlas Chat</span>
-          </div>
-          <button class="top-action" onclick="newChat()">New Chat</button>
+          <button class="top-action" onclick="toggleSidebar()">☰</button>
+          <div class="model-pill"><span class="model-dot"></span><span>Atlas Chat</span></div>
+          <button class="top-action" onclick="newChat()">New</button>
         </div>
       </header>
-
       <section class="content">
         <div id="auth">
-          <h2 class="auth-title">ورود به ATLAS AI</h2>
-          <p class="auth-desc">
-            با ایمیل و رمز وارد شو. اگر حساب نداشته باشی، به‌صورت خودکار ثبت‌نام انجام می‌شود.
-          </p>
-
-          <input id="email" type="email" placeholder="ایمیل" autocomplete="email" />
-          <input id="password" type="password" placeholder="رمز عبور" autocomplete="current-password" />
-
+          <h2 style="text-align:center">ورود</h2>
+          <input id="email" type="email" placeholder="ایمیل" />
+          <input id="password" type="password" placeholder="رمز عبور" />
           <button class="primary-btn" onclick="login()">ورود / ثبت‌نام</button>
         </div>
-
         <div id="chat"></div>
-
         <div id="inputArea">
           <div class="input-wrap">
-            <input
-              id="msgInput"
-              type="text"
-              placeholder="پیام خود را بنویسید..."
-              autocomplete="off"
-              onkeydown="handleInputKey(event)"
-            />
-            <!-- دکمه جدید برای تصویر -->
-            <button id="imgBtn" onclick="generateImage()" style="background: #ff00ff; color: #fff;">🎨</button>
-            <button class="send-btn" onclick="send()" title="ارسال">➤</button>
+            <input id="msgInput" type="text" placeholder="پیام..." onkeydown="if(event.key==='Enter')send()" />
+            <button onclick="generateImage()" style="background:var(--accent); border:none; border-radius:10px; color:white; padding:0 10px">🎨</button>
+            <button onclick="send()" style="background:var(--accent-2); border:none; border-radius:10px; color:white; padding:0 15px">➤</button>
           </div>
         </div>
       </section>
     </main>
-
     <aside class="sidebar">
-      <div class="sidebar-head">
-        <div class="sidebar-logo">
-          <div class="logo-mark">A</div>
-          <div class="sidebar-name">
-            <strong>ATLAS AI</strong>
-            <span>Workspace</span>
-          </div>
-        </div>
-      </div>
-
-      <button class="side-btn active" onclick="newChat()">＋ گفتگوی جدید</button>
-      <button class="side-btn" onclick="loadHistory()">🕘 تاریخچه</button>
-      <button class="side-btn" onclick="showSaved()">⭐ ذخیره‌شده‌ها</button>
-      <button class="side-btn" onclick="showTools()">🧰 ابزارها</button>
-      <button class="side-btn" onclick="toggleTheme()">🌗 تغییر تم</button>
-
-      <div class="side-section-title">گفتگوها</div>
-      <div id="historyList" class="history-list">
-        <div class="history-item">بعد از ورود، پیام‌های ذخیره‌شده اینجا دیده می‌شوند.</div>
-      </div>
-
-      <div class="sidebar-footer">
-        <div id="userChip" class="user-chip">وارد نشده‌اید</div>
-        <button class="side-btn danger" onclick="clearChat()">🗑 پاک کردن صفحه چت</button>
-        <button class="side-btn danger" onclick="logout()">⎋ خروج</button>
-      </div>
+      <button class="primary-btn" onclick="newChat()">＋ چت جدید</button>
+      <div id="userChip" style="padding:10px; font-size:12px; color:var(--muted)">وارد نشده‌اید</div>
+      <button class="primary-btn" style="background:var(--danger)" onclick="logout()">خروج</button>
     </aside>
   </div>
 
   <script>
-    const SUPABASE_URL = "https://atjzqpaxdyywdwidyyvz.supabase.co";
+/* =========================
+   ATLAS AI ORIGINAL THEME PATCH
+   ========================= */
 
-    const SUPABASE_ANON_KEY =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0anpxcGF4ZHl5d2R3aWR5eXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MTgzNzYsImV4cCI6MjA5NzQ5NDM3Nn0.xfUqnGj4rByYD3ujeSNQpxpczhNZ2453FrWJ7IeY_3A";
+* {
+  box-sizing: border-box;
+}
 
-    let atlasSafeClient = null;
+:root {
+  --bg: #050505;
+  --panel: rgba(14, 14, 18, 0.86);
+  --panel-strong: rgba(18, 18, 24, 0.96);
+  --border: rgba(255, 255, 255, 0.09);
+  --text: #ffffff;
+  --muted: rgba(255, 255, 255, 0.62);
+  --soft: rgba(255, 255, 255, 0.08);
+  --accent: #7c3aed;
+  --accent-2: #06b6d4;
+  --danger: #ef4444;
+  --user: linear-gradient(135deg, #2563eb, #7c3aed);
+  --bot: linear-gradient(135deg, #1f2937, #111827);
+}
 
-    window.user = null;
-    window.currentUser = null;
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, Tahoma, sans-serif;
+}
 
-    function getSafeSupabaseConfig() {
-      return {
-        url: SUPABASE_URL,
-        key: SUPABASE_ANON_KEY
-      };
-    }
+#grokCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background:
+    radial-gradient(circle at center, #111827 0%, #050505 55%, #000 100%);
+}
 
-    function getAtlasSafeClient() {
-      if (atlasSafeClient) return atlasSafeClient;
+.app-shell {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+}
 
-      if (!window.supabase || !window.supabase.createClient) {
-        console.error("Supabase library is not loaded.");
-        return null;
-      }
+.main-chat {
+  flex: 1;
+  min-width: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(5, 5, 8, 0.38),
+      rgba(5, 5, 8, 0.72)
+    );
+}
 
-      const cfg = getSafeSupabaseConfig();
+.topbar {
+  height: 64px;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(5, 5, 8, 0.42);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
 
-      if (!cfg.url || !cfg.key || cfg.key === "PASTE_YOUR_SUPABASE_ANON_KEY_HERE") {
-        console.error("Supabase URL or anon key is missing.");
-        addSystemMsg("کلید Supabase تنظیم نشده است. مقدار SUPABASE_ANON_KEY را در فایل index.html قرار بده.");
-        return null;
-      }
+.top-left {
+  direction: ltr;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-      atlasSafeClient = window.supabase.createClient(cfg.url, cfg.key);
-      window.atlasSafeClient = atlasSafeClient;
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
 
-      return atlasSafeClient;
-    }
+.brand-title {
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
 
-    function showAppAfterLogin() {
-      const auth = document.getElementById("auth");
-      const chat = document.getElementById("chat");
-      const inputArea = document.getElementById("inputArea");
-      const userChip = document.getElementById("userChip");
+.brand-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+}
 
-      auth.style.display = "none";
-      chat.style.display = "flex";
-      inputArea.style.display = "flex";
+.model-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--soft);
+  font-size: 14px;
+  color: var(--text);
+}
 
-      if (window.currentUser && window.currentUser.email) {
-        userChip.textContent = window.currentUser.email;
-      }
+.model-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.9);
+}
 
-      if (!chat.dataset.ready) {
-        showWelcome();
-        chat.dataset.ready = "true";
-      }
-    }
+.top-action,
+.side-btn {
+  border: 1px solid var(--border);
+  background: var(--soft);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 9px 12px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
 
-    function showWelcome() {
-      const chat = document.getElementById("chat");
+.top-action:hover,
+.side-btn:hover {
+  background: rgba(255, 255, 255, 0.13);
+}
 
-      if (chat.children.length > 0) return;
+.content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 
-      const welcome = document.createElement("div");
-      welcome.className = "welcome";
-      welcome.innerHTML = `
-        <h1>سلام، من ATLAS هستم</h1>
-      `;
+#auth {
+  width: min(400px, 90%);
+  margin: auto;
+  padding: 25px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--panel);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.45);
+}
 
-      chat.appendChild(welcome);
-    }
+#auth h2 {
+  margin: 0 0 8px;
+  text-align: center;
+  color: #fff;
+}
 
-    function removeWelcome() {
-      const welcome = document.querySelector(".welcome");
-      if (welcome) welcome.remove();
-    }
+#auth input,
+#msgInput {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 12px;
+  outline: none;
+}
 
-    function addMsg(text, role = "bot") {
-      removeWelcome();
+#auth input:focus,
+#msgInput:focus {
+  border-color: rgba(124, 58, 237, 0.65);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.16);
+}
 
-      const chat = document.getElementById("chat");
-      const msg = document.createElement("div");
+#auth input::placeholder,
+#msgInput::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
 
-      msg.className = `msg ${role}`;
-      msg.textContent = text;
+.primary-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  color: white;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s ease;
+}
 
-      chat.appendChild(msg);
-      chat.scrollTop = chat.scrollHeight;
+.primary-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
 
-      return msg;
-    }
+#chat {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: none;
+  flex-direction: column;
+  gap: 15px;
+}
 
-    window.addMsg = addMsg;
+.msg {
+  max-width: 85%;
+  padding: 12px 14px;
+  border-radius: 15px;
+  line-height: 1.6;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
 
-    function addSystemMsg(text) {
-      const chat = document.getElementById("chat");
+.msg.user {
+  align-self: flex-end;
+  background: var(--user);
+  color: white;
+  border-bottom-right-radius: 5px;
+}
 
-      if (!chat) return;
+.msg.bot {
+  align-self: flex-start;
+  background: var(--bot);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-bottom-left-radius: 5px;
+}
 
-      const msg = document.createElement("div");
-      msg.className = "msg system";
-      msg.textContent = text;
-      chat.appendChild(msg);
-      chat.scrollTop = chat.scrollHeight;
-    }
-window.login = async function login() {
-    try {
-        // ۱. چک کردن متغیرهای احتمالی که کلاینت داخلشان است
-        let client = null;
-        
-        if (typeof getAtlasSafeClient === "function") {
-            client = getAtlasSafeClient();
-        }
-        if (!client && window.client) client = window.client;
-        if (!client && window.supabase) client = window.supabase;
+.msg.system {
+  align-self: center;
+  max-width: 92%;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  text-align: center;
+}
 
-        // ۲. اگر باز هم پیدا نشد، یک پیغام شفاف با جزئیات به ما بده
-        if (!client) {
-            let debugMsg = "خطای اتصال:\n";
-            debugMsg += "getAtlasSafeClient وجود دارد؟ " + (typeof getAtlasSafeClient === "function") + "\n";
-            debugMsg += "window.client وجود دارد؟ " + (!!window.client) + "\n";
-            debugMsg += "window.supabase وجود دارد؟ " + (!!window.supabase);
-            alert(debugMsg);
-            return;
-        }
+#inputArea {
+  display: none;
+  padding: 15px;
+  background: rgba(5, 5, 8, 0.5);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
 
-        // ۳. گرفتن ایمیل و رمز
-        const email = document.getElementById("email")?.value || document.getElementById("loginEmail")?.value;
-        const password = document.getElementById("password")?.value || document.getElementById("loginPassword")?.value;
+.input-wrap {
+  width: min(800px, 100%);
+  margin: 0 auto;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
 
-        if (!email || !password) {
-            alert("ایمیل یا رمز وارد نشده!");
-            return;
-        }
+.input-wrap button,
+#imgBtn {
+  border: none;
+  border-radius: 10px;
+  color: white;
+  padding: 0 15px;
+  min-height: 44px;
+  cursor: pointer;
+}
 
-        // ۴. لاگین
-        let { data, error } = await client.auth.signInWithPassword({ email, password });
-        
-        if (error) {
-            alert("خطای سوپابیس: " + error.message);
-        } else {
-            alert("ورود موفق!");
-        }
+#imgBtn {
+  background: var(--accent);
+}
 
-    } catch (err) {
-        alert("خطای غیرمنتظره: " + err.message);
-    }
-};
-    // ادامه کد بقیه ...
+.input-wrap button:last-child {
+  background: var(--accent-2);
+}
 
-    // ۴. اگر کاربر وجود نداشت، تلاش برای ثبت‌نام (اختیاری - بر اساس منطق قبلی شما)
-    if (error) {
-      const signup = await client.auth.signUp({ email, password });
-      data = signup.data;
-      error = signup.error;
-    }
+.sidebar {
+  width: 280px;
+  height: 100vh;
+  border-left: 1px solid var(--border);
+  background: var(--panel-strong);
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  gap: 10px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
 
-    if (error) {
-      alert("خطا در ورود: " + error.message);
-      return;
-    }
+.user-chip {
+  padding: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  word-break: break-word;
+}
 
-    alert("خوش آمدید! ورود موفقیت‌آمیز بود.");
-    
-    // اجرای توابع بعد از ورود موفق (اگر در کد شما وجود دارند)
-    if (typeof showApp === "function") showApp();
-    if (typeof loadUserData === "function") loadUserData();
-    
-  } catch (err) {
-    console.error(err);
-    alert("یک خطای سیستمی رخ داد.");
+.sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.logout-btn {
+  background: var(--danger) !important;
+}
+
+@media (max-width: 860px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    transform: translateX(100%);
+    transition: 0.3s ease;
+    z-index: 100;
   }
-};
-        if (result.error) {
-          console.error(result.error);
-          alert("خطای ورود یا ثبت‌نام: " + result.error.message);
-          return;
-        }
 
-        const sessionResult = await client.auth.getSession();
-        const loggedUser =
-          sessionResult.data &&
-          sessionResult.data.session &&
-          sessionResult.data.session.user
-            ? sessionResult.data.session.user
-            : result.data.user;
-
-        if (!loggedUser) {
-          alert("ورود انجام شد، اما کاربر پیدا نشد. ایمیل را تایید کرده‌ای؟");
-          return;
-        }
-
-        window.user = loggedUser;
-        window.currentUser = loggedUser;
-
-        showAppAfterLogin();
-        await loadHistory();
-      } catch (err) {
-        console.error(err);
-        alert("خطا در اتصال به Supabase یا اینترنت.");
-      }
-    }
-
-    window.login = login;
-
-    async function restoreSession() {
-      const client = getAtlasSafeClient();
-      if (!client) return;
-
-      try {
-        const { data, error } = await client.auth.getSession();
-
-        if (error) {
-          console.error(error);
-          return;
-        }
-
-        if (data && data.session && data.session.user) {
-          window.user = data.session.user;
-          window.currentUser = data.session.user;
-
-          showAppAfterLogin();
-          await loadHistory();
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    async function loadHistory() {
-      const client = getAtlasSafeClient();
-      const activeUser = window.user || window.currentUser;
-
-      if (!client || !activeUser || !activeUser.id) return;
-
-      const chat = document.getElementById("chat");
-      const historyList = document.getElementById("historyList");
-
-      try {
-        const { data, error } = await client
-          .from("messages")
-          .select("*")
-          .eq("user_id", activeUser.id)
-          .order("created_at", { ascending: true });
-
-        if (error) {
-          console.error(error);
-          addSystemMsg("تاریخچه پیام‌ها لود نشد. جدول messages یا Policyهای Supabase را بررسی کن.");
-          return;
-        }
-
-        chat.innerHTML = "";
-        historyList.innerHTML = "";
-
-        if (!data || data.length === 0) {
-          showWelcome();
-          historyList.innerHTML = `<div class="history-item">هنوز گفتگویی ذخیره نشده است.</div>`;
-          return;
-        }
-
-        data.forEach((m) => {
-          addMsg(m.text || "", m.role || "bot");
-        });
-
-        const lastMessages = data.slice(-8).reverse();
-
-        lastMessages.forEach((m) => {
-          const item = document.createElement("div");
-          item.className = "history-item";
-          item.textContent = m.text || "پیام بدون متن";
-          historyList.appendChild(item);
-        });
-      } catch (err) {
-        console.error(err);
-        addSystemMsg("خطا در خواندن تاریخچه.");
-      }
-    }
-
-    window.loadHistory = loadHistory;
-
-    async function saveMsg(role, text) {
-      const client = getAtlasSafeClient();
-      const activeUser = window.user || window.currentUser;
-
-      if (!client || !activeUser || !activeUser.id) return;
-
-      try {
-        const { error } = await client.from("messages").insert({
-          user_id: activeUser.id,
-          role: role,
-          text: text
-        });
-
-        if (error) {
-          console.error(error);
-          addSystemMsg("پیام در Supabase ذخیره نشد. جدول messages یا RLS را بررسی کن.");
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    window.saveMsg = saveMsg;
-
-async function send() {
-    const input = document.getElementById("prompt");
-    const text = input.value.trim();
-
-    if (!text) return;
-
-    // ۱. نمایش پیام کاربر در صفحه
-    addMsg(text, "user");
-    input.value = "";
-
-    // ۲. نمایش حالت "در حال تایپ..."
-    const typingMsg = addMsg("در حال فکر کردن... 🤔", "bot");
-
-    try {
-        const client = getAtlasSafeClient(); // کلاینت سوپابیس تو
-
-        // ۳. فراخوانی هوش مصنوعی (از طریق Edge Function)
-        const { data, error } = await client.functions.invoke('atlas-chat', {
-            body: { message: text }
-        });
-
-        if (error) throw error;
-
-        // ۴. جایگزین کردن پاسخ واقعی با پیام در حال تایپ
-        typingMsg.textContent = data.reply;
-
-    } catch (err) {
-        typingMsg.textContent = "متأسفم، مشکلی در اتصال پیش آمد. دوباره تلاش کنید.";
-        console.error("Chat Error:", err);
-    }
-
-    window.send = send;
-
-    function createLocalReply(text) {
-      const clean = text.toLowerCase();
-
-      if (clean.includes("سلام")) {
-        return "سلام! من ATLAS هستم. چطور می‌تونم کمکت کنم؟";
-      }
-
-      if (clean.includes("سایدبار") || clean.includes("نوار")) {
-        return "سایدبار سمت راست فعال است. می‌توانی گفتگوی جدید بسازی، تاریخچه را ببینی، تم را عوض کنی یا چت را پاک کنی.";
-      }
-
-      if (clean.includes("supabase")) {
-        return "برای Supabase مطمئن شو جدول messages ستون‌های user_id، role، text و created_at را دارد و RLS Policy درست تنظیم شده است.";
-      }
-
-      return "پیامت دریافت و ذخیره شد. اگر می‌خواهی پاسخ هوش مصنوعی واقعی داشته باشی، باید یک API یا Edge Function به این بخش وصل شود.";
-    }
-
-    function handleInputKey(event) {
-      if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        send();
-      }
-    }
-
-    window.handleInputKey = handleInputKey;
-
-    function refreshHistoryPreview(text) {
-      const historyList = document.getElementById("historyList");
-
-      if (!historyList) return;
-
-      const empty = historyList.querySelector(".history-item");
-      if (empty && empty.textContent.includes("هنوز گفتگویی")) {
-        historyList.innerHTML = "";
-      }
-
-      const item = document.createElement("div");
-      item.className = "history-item";
-      item.textContent = text;
-
-      historyList.prepend(item);
-    }
-
-    function newChat() {
-      const chat = document.getElementById("chat");
-      const input = document.getElementById("msgInput");
-
-      chat.innerHTML = "";
-      chat.dataset.ready = "";
-      showWelcome();
-
-      if (input) input.focus();
-
-      document.body.classList.remove("sidebar-open");
-    }
-
-    window.newChat = newChat;
-
-    function clearChat() {
-      if (!confirm("فقط پیام‌های روی صفحه پاک شوند؟ پیام‌های ذخیره‌شده در Supabase حذف نمی‌شوند.")) {
-        return;
-      }
-
-      const chat = document.getElementById("chat");
-      chat.innerHTML = "";
-      chat.dataset.ready = "";
-      showWelcome();
-    }
-
-    window.clearChat = clearChat;
-
-    function showSaved() {
-      addSystemMsg("بخش ذخیره‌شده‌ها هنوز به دیتابیس وصل نشده است.");
-      document.body.classList.remove("sidebar-open");
-    }
-
-    window.showSaved = showSaved;
-
-    function showTools() {
-      addSystemMsg("بخش ابزارها آماده است؛ می‌توانی بعداً ابزارهای دلخواهت را اینجا اضافه کنی.");
-      document.body.classList.remove("sidebar-open");
-    }
-
-    window.showTools = showTools;
-
-    function toggleTheme() {
-      document.body.classList.toggle("light");
-    }
-
-    window.toggleTheme = toggleTheme;
-
-    function toggleSidebar() {
-      document.body.classList.toggle("sidebar-open");
-    }
-
-    window.toggleSidebar = toggleSidebar;
-
-    async function logout() {
-      const client = getAtlasSafeClient();
-
-      if (client) {
-        await client.auth.signOut();
-      }
-
-      window.user = null;
-      window.currentUser = null;
-
-      document.getElementById("auth").style.display = "flex";
-      document.getElementById("chat").style.display = "none";
-      document.getElementById("inputArea").style.display = "none";
-      document.getElementById("chat").innerHTML = "";
-      document.getElementById("userChip").textContent = "وارد نشده‌اید";
-      document.getElementById("historyList").innerHTML =
-        `<div class="history-item">بعد از ورود، پیام‌های ذخیره‌شده اینجا دیده می‌شوند.</div>`;
-    }
-
-    window.logout = logout;
-
-    restoreSession();
+  body.sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+}
   </script>
-
-  <script>
-    const canvas = document.getElementById("grokCanvas");
-    const ctx = canvas.getContext("2d");
-
-    let particles = [];
-    let speed = 0.25;
-    let targetSpeed = 1.4;
-    let centerX = 0;
-    let centerY = 0;
-
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      centerX = canvas.width / 2;
-      centerY = canvas.height / 2;
-      createParticles();
-    }
-
-    window.addEventListener("resize", resizeCanvas);
-
-    class Particle {
-      constructor() {
-        this.reset(true);
-      }
-
-      reset(randomPosition = false) {
-        this.depth = Math.random();
-        this.size = 0.45 + this.depth * 1.6;
-        this.alpha = 0.18 + this.depth * 0.75;
-
-        if (randomPosition) {
-          this.x = Math.random() * canvas.width;
-          this.y = Math.random() * canvas.height;
-        } else {
-          this.x = canvas.width + Math.random() * 160;
-          this.y = Math.random() * canvas.height + 80;
-        }
-
-        this.prevX = this.x;
-        this.prevY = this.y;
-
-        this.vx = -0.42 - this.depth * 1.15;
-        this.vy = -0.18 - this.depth * 0.45;
-      }
-
-      update() {
-        this.prevX = this.x;
-        this.prevY = this.y;
-
-        const dx = centerX - this.x;
-        const dy = centerY - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        const gravity = 0.008 + this.depth * 0.018;
-
-        this.x += (this.vx * speed) + (dx / dist) * gravity;
-        this.y += (this.vy * speed) + (dy / dist) * gravity;
-
-        if (
-          this.x < -180 ||
-          this.y < -180 ||
-          this.x > canvas.width + 220 ||
-          this.y > canvas.height + 220
-        ) {
-          this.reset(false);
-        }
-      }
-
-      draw() {
-        const trail = 8 + this.depth * 26;
-
-        ctx.beginPath();
-        ctx.moveTo(this.prevX, this.prevY);
-        ctx.lineTo(this.x + this.vx * trail, this.y + this.vy * trail);
-        ctx.strokeStyle = `rgba(255,255,255,${this.alpha})`;
-        ctx.lineWidth = this.size;
-        ctx.shadowBlur = 12 + this.depth * 18;
-        ctx.shadowColor = "rgba(180,210,255,0.9)";
-        ctx.stroke();
-
-        ctx.shadowBlur = 0;
-      }
-    }
-
-    function createParticles() {
-      const count = Math.min(360, Math.max(150, Math.floor((canvas.width * canvas.height) / 6200)));
-      particles = [];
-
-      for (let i = 0; i < count; i++) {
-        particles.push(new Particle());
-      }
-    }
-
-    function drawNebula() {
-      const gradient = ctx.createRadialGradient(
-        centerX,
-        centerY,
-        0,
-        centerX,
-        centerY,
-        Math.max(canvas.width, canvas.height) * 0.72
-      );
-
-      gradient.addColorStop(0, "rgba(88, 28, 135, 0.16)");
-      gradient.addColorStop(0.36, "rgba(14, 116, 144, 0.08)");
-      gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    function animateSpace() {
-      ctx.fillStyle = "rgba(0,0,0,0.18)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      drawNebula();
-
-      speed += (targetSpeed - speed) * 0.018;
-
-      if (Math.abs(targetSpeed - speed) < 0.05) {
-        targetSpeed = 0.7 + Math.random() * 2.2;
-      }
-
-      for (const p of particles) {
-        p.update();
-        p.draw();
-      }
-
-      requestAnimationFrame(animateSpace);
-    }
-
-    resizeCanvas();
-    animateSpace();
-  async function generateImage() {
-    const input = document.getElementById('msgInput'); // مطمئن شو آی‌دی درست است
-    const prompt = input.value.trim();
-    if (!prompt) return alert("لطفاً توصیف تصویر را بنویسید!");
-
-    window.addMsg("در حال تولید تصویر: " + prompt, 'user');
-    const originalPlaceholder = input.placeholder;
-    input.value = '';
-    input.placeholder = "لطفاً صبر کنید...";
-    input.disabled = true;
-
-    try {
-        // فراخوانی Edge Function از طریق کلاینت Supabase
-        const { data, error } = await client.functions.invoke('atlas-image', {
-            body: { prompt: prompt }
-        });
-
-        if (error) throw error;
-
-        if (data && data.data && data.data[0].b64_json) {
-            const imgUrl = "data:image/png;base64," + data.data[0].b64_json;
-            window.addMsg(`<img src="${imgUrl}" style="width:100%; border-radius:10px; margin-top:10px;" />`, 'bot');
-        }
-    } catch (err) {
-        console.error("Image Error:", err);
-        window.addMsg("خطا در تولید تصویر. لطفاً دوباره تلاش کنید.", 'bot');
-    } finally {
-        input.placeholder = originalPlaceholder;
-        input.disabled = false;
-    }
-} 
-  async function generateImage() {
-  const input = document.getElementById("prompt"); // یا نام آیدی ورودی متن شما
-  const prompt = input.value.trim();
-  
-  if (!prompt) {
-    alert("لطفاً ابتدا توصیف تصویر را بنویسید.");
-    return;
-  }
-
-  // نمایش پیام در حال بارگذاری
-  const tempMsg = addMsg("در حال ساخت تصویر... 🎨", "bot");
-  input.value = "";
-
-  try {
-    const client = getAtlasSafeClient(); // تابع کلاینت شما
-    const { data, error } = await client.functions.invoke('atlas-image', {
-      body: { prompt: prompt }
-    });
-
-    if (error) throw error;
-
-    // حذف پیام "در حال ساخت" و نمایش تصویر
-    tempMsg.remove();
-    addImageMsg(data.url, "bot");
-    
-  } catch (err) {
-    tempMsg.textContent = "خطا در تولید تصویر: " + (err.message || "خطای نامشخص");
-    console.error(err);
-  }
-}
-
-// تابع کمکی برای نمایش تصویر بدون تغییر در addMsg اصلی
-function addImageMsg(url, role = "bot") {
-  const chat = document.getElementById("chat");
-  const msg = document.createElement("div");
-  msg.className = `msg ${role}`;
-  
-  const img = document.createElement("img");
-  img.src = url;
-  img.style.maxWidth = "100%";
-  img.style.borderRadius = "10px";
-  img.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
-  
-  msg.appendChild(img);
-  chat.appendChild(msg);
-  chat.scrollTop = chat.scrollHeight;
-}
-window.login = async function () {
-  try {
-    const emailInput =
-      document.getElementById("email") ||
-      document.getElementById("loginEmail") ||
-      document.querySelector('input[type="email"]');
-
-    const passwordInput =
-      document.getElementById("password") ||
-      document.getElementById("loginPassword") ||
-      document.querySelector('input[type="password"]');
-
-    if (!emailInput || !passwordInput) {
-      alert("فیلد ایمیل یا رمز عبور پیدا نشد.");
-      return;
-    }
-
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
-
-    if (!email || !password) {
-      alert("ایمیل و رمز عبور را وارد کن.");
-      return;
-    }
-
-    if (!window.client && typeof client === "undefined") {
-      alert("اتصال Supabase پیدا نشد.");
-      return;
-    }
-
-    const supabaseClient = window.client || client;
-
-    let { data, error } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (error) {
-      const signup = await supabaseClient.auth.signUp({
-        email,
-        password
-      });
-
-      data = signup.data;
-      error = signup.error;
-    }
-
-    if (error) {
-      alert("خطا در ورود یا ثبت‌نام: " + error.message);
-      console.error("Login error:", error);
-      return;
-    }
-
-    alert("ورود موفق بود.");
-
-    console.log("Auth data:", data);
-
-    if (typeof showApp === "function") {
-      showApp();
-    }
-
-    if (typeof loadUserData === "function") {
-      loadUserData();
-    }
-
-  } catch (err) {
-    console.error("Login fatal error:", err);
-    alert("خطای غیرمنتظره در ورود.");
-  }
-};
-
-window.logout = async function () {
-  try {
-    if (!window.client && typeof client === "undefined") {
-      alert("اتصال Supabase پیدا نشد.");
-      return;
-    }
-
-    const supabaseClient = window.client || client;
-
-    await supabaseClient.auth.signOut();
-
-    alert("خارج شدی.");
-
-    location.reload();
-
-  } catch (err) {
-    console.error("Logout error:", err);
-    alert("خطا در خروج از حساب.");
-  }
-};
-</script>
-
 </body>
 </html>
