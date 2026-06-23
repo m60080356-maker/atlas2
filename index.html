@@ -693,7 +693,6 @@
       welcome.className = "welcome";
       welcome.innerHTML = `
         <h1>سلام، من ATLAS هستم</h1>
-        <p>پیامت را بنویس. گفتگوها بعد از ورود در Supabase ذخیره می‌شوند.</p>
       `;
 
       chat.appendChild(welcome);
@@ -889,24 +888,35 @@
 
     window.saveMsg = saveMsg;
 
-    async function send() {
-      const input = document.getElementById("msgInput");
-      const text = input.value.trim();
+async function send() {
+    const input = document.getElementById("prompt");
+    const text = input.value.trim();
 
-      if (!text) return;
+    if (!text) return;
 
-      input.value = "";
+    // ۱. نمایش پیام کاربر در صفحه
+    addMsg(text, "user");
+    input.value = "";
 
-      addMsg(text, "user");
-      await saveMsg("user", text);
+    // ۲. نمایش حالت "در حال تایپ..."
+    const typingMsg = addMsg("در حال فکر کردن... 🤔", "bot");
 
-      const botText = createLocalReply(text);
+    try {
+        const client = getAtlasSafeClient(); // کلاینت سوپابیس تو
 
-      setTimeout(async () => {
-        addMsg(botText, "bot");
-        await saveMsg("bot", botText);
-        refreshHistoryPreview(text);
-      }, 450);
+        // ۳. فراخوانی هوش مصنوعی (از طریق Edge Function)
+        const { data, error } = await client.functions.invoke('atlas-chat', {
+            body: { message: text }
+        });
+
+        if (error) throw error;
+
+        // ۴. جایگزین کردن پاسخ واقعی با پیام در حال تایپ
+        typingMsg.textContent = data.reply;
+
+    } catch (err) {
+        typingMsg.textContent = "متأسفم، مشکلی در اتصال پیش آمد. دوباره تلاش کنید.";
+        console.error("Chat Error:", err);
     }
 
     window.send = send;
