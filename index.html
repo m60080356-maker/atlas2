@@ -1,7 +1,7 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta name="google-site-verification" content="HTvYztTztqEIahskEYErq7mh0QlDY19aKHCwZKlEzl0" />" />
+  <meta name="google-site-verification" content="HTvYztTztqEIahskEYErq7mh0QlDY19aKHCwZKlEzl0" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ATLAS AI</title>
@@ -586,7 +586,6 @@
               autocomplete="off"
               onkeydown="handleInputKey(event)"
             />
-            <!-- دکمه جدید برای تصویر -->
             <button id="imgBtn" onclick="generateImage()" style="background: #ff00ff; color: #fff;">🎨</button>
             <button class="send-btn" onclick="send()" title="ارسال">➤</button>
           </div>
@@ -626,9 +625,7 @@
 
   <script>
     const SUPABASE_URL = "https://atjzqpaxdyywdwidyyvz.supabase.co";
-
-    const SUPABASE_ANON_KEY =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0anpxcGF4ZHl5d2R3aWR5eXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MTgzNzYsImV4cCI6MjA5NzQ5NDM3Nn0.xfUqnGj4rByYD3ujeSNQpxpczhNZ2453FrWJ7IeY_3A";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0anpxcGF4ZHl5d2R3aWR5eXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MTgzNzYsImV4cCI6MjA5NzQ5NDM3Nn0.xfUqnGj4rByYD3ujeSNQpxpczhNZ2453FrWJ7IeY_3A";
 
     let atlasSafeClient = null;
 
@@ -651,13 +648,6 @@
       }
 
       const cfg = getSafeSupabaseConfig();
-
-      if (!cfg.url || !cfg.key || cfg.key === "PASTE_YOUR_SUPABASE_ANON_KEY_HERE") {
-        console.error("Supabase URL or anon key is missing.");
-        addSystemMsg("کلید Supabase تنظیم نشده است. مقدار SUPABASE_ANON_KEY را در فایل index.html قرار بده.");
-        return null;
-      }
-
       atlasSafeClient = window.supabase.createClient(cfg.url, cfg.key);
       window.atlasSafeClient = atlasSafeClient;
 
@@ -717,7 +707,6 @@
 
       return msg;
     }
-
     window.addMsg = addMsg;
 
     function addSystemMsg(text) {
@@ -731,87 +720,48 @@
       chat.appendChild(msg);
       chat.scrollTop = chat.scrollHeight;
     }
-window.login = async function login() {
-    try {
-        // ۱. چک کردن متغیرهای احتمالی که کلاینت داخلشان است
-        let client = null;
-        
-        if (typeof getAtlasSafeClient === "function") {
-            client = getAtlasSafeClient();
-        }
-        if (!client && window.client) client = window.client;
-        if (!client && window.supabase) client = window.supabase;
 
-        // ۲. اگر باز هم پیدا نشد، یک پیغام شفاف با جزئیات به ما بده
-        if (!client) {
-            let debugMsg = "خطای اتصال:\n";
-            debugMsg += "getAtlasSafeClient وجود دارد؟ " + (typeof getAtlasSafeClient === "function") + "\n";
-            debugMsg += "window.client وجود دارد؟ " + (!!window.client) + "\n";
-            debugMsg += "window.supabase وجود دارد؟ " + (!!window.supabase);
-            alert(debugMsg);
-            return;
-        }
+    async function login() {
+      const client = getAtlasSafeClient();
+      if (!client) return;
 
-        // ۳. گرفتن ایمیل و رمز
-        const email = document.getElementById("email")?.value || document.getElementById("loginEmail")?.value;
-        const password = document.getElementById("password")?.value || document.getElementById("loginPassword")?.value;
+      try {
+        const emailInput = document.getElementById("email");
+        const passwordInput = document.getElementById("password");
 
-        if (!email || !password) {
-            alert("ایمیل یا رمز وارد نشده!");
-            return;
-        }
-
-        // ۴. لاگین
-        let { data, error } = await client.auth.signInWithPassword({ email, password });
-        
-        if (error) {
-            alert("خطای سوپابیس: " + error.message);
-        } else {
-            alert("ورود موفق!");
-        }
-
-    } catch (err) {
-        alert("خطای غیرمنتظره: " + err.message);
-    }
-};
-    // ادامه کد بقیه ...
-
-    // ۴. اگر کاربر وجود نداشت، تلاش برای ثبت‌نام (اختیاری - بر اساس منطق قبلی شما)
-    if (error) {
-      const signup = await client.auth.signUp({ email, password });
-      data = signup.data;
-      error = signup.error;
-    }
-
-    if (error) {
-      alert("خطا در ورود: " + error.message);
-      return;
-    }
-
-    alert("خوش آمدید! ورود موفقیت‌آمیز بود.");
-    
-    // اجرای توابع بعد از ورود موفق (اگر در کد شما وجود دارند)
-    if (typeof showApp === "function") showApp();
-    if (typeof loadUserData === "function") loadUserData();
-    
-  } catch (err) {
-    console.error(err);
-    alert("یک خطای سیستمی رخ داد.");
-  }
-};
-        if (result.error) {
-          console.error(result.error);
-          alert("خطای ورود یا ثبت‌نام: " + result.error.message);
+        if (!emailInput || !passwordInput) {
+          alert("فیلد ایمیل یا رمز عبور پیدا نشد.");
           return;
         }
 
-        const sessionResult = await client.auth.getSession();
-        const loggedUser =
-          sessionResult.data &&
-          sessionResult.data.session &&
-          sessionResult.data.session.user
-            ? sessionResult.data.session.user
-            : result.data.user;
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (!email || !password) {
+          alert("ایمیل و رمز عبور را وارد کن.");
+          return;
+        }
+
+        let { data, error } = await client.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) {
+          const signup = await client.auth.signUp({
+            email,
+            password
+          });
+          data = signup.data;
+          error = signup.error;
+        }
+
+        if (error) {
+          alert("خطا در ورود یا ثبت‌نام: " + error.message);
+          return;
+        }
+
+        const loggedUser = data.session?.user || data.user;
 
         if (!loggedUser) {
           alert("ورود انجام شد، اما کاربر پیدا نشد. ایمیل را تایید کرده‌ای؟");
@@ -823,12 +773,12 @@ window.login = async function login() {
 
         showAppAfterLogin();
         await loadHistory();
+        alert("خوش آمدید! ورود با موفقیت انجام شد.");
       } catch (err) {
         console.error(err);
         alert("خطا در اتصال به Supabase یا اینترنت.");
       }
     }
-
     window.login = login;
 
     async function restoreSession() {
@@ -903,7 +853,6 @@ window.login = async function login() {
         addSystemMsg("خطا در خواندن تاریخچه.");
       }
     }
-
     window.loadHistory = loadHistory;
 
     async function saveMsg(role, text) {
@@ -927,59 +876,107 @@ window.login = async function login() {
         console.error(err);
       }
     }
-
     window.saveMsg = saveMsg;
 
-async function send() {
-    const input = document.getElementById("prompt");
-    const text = input.value.trim();
+    async function send() {
+      const input = document.getElementById("msgInput");
+      const text = input.value.trim();
 
-    if (!text) return;
+      if (!text) return;
 
-    // ۱. نمایش پیام کاربر در صفحه
-    addMsg(text, "user");
-    input.value = "";
+      addMsg(text, "user");
+      input.value = "";
 
-    // ۲. نمایش حالت "در حال تایپ..."
-    const typingMsg = addMsg("در حال فکر کردن... 🤔", "bot");
+      await saveMsg("user", text);
+      refreshHistoryPreview(text);
 
-    try {
-        const client = getAtlasSafeClient(); // کلاینت سوپابیس تو
+      const typingMsg = addMsg("در حال فکر کردن... 🤔", "bot");
 
-        // ۳. فراخوانی هوش مصنوعی (از طریق Edge Function)
+      try {
+        const client = getAtlasSafeClient();
+
         const { data, error } = await client.functions.invoke('atlas-chat', {
-            body: { message: text }
+          body: { message: text }
         });
 
         if (error) throw error;
 
-        // ۴. جایگزین کردن پاسخ واقعی با پیام در حال تایپ
-        typingMsg.textContent = data.reply;
-
-    } catch (err) {
+        if (data && data.reply) {
+          typingMsg.textContent = data.reply;
+          await saveMsg("bot", data.reply);
+        } else {
+          typingMsg.textContent = "پاسخ معتبری از هوش مصنوعی دریافت نشد.";
+        }
+      } catch (err) {
         typingMsg.textContent = "متأسفم، مشکلی در اتصال پیش آمد. دوباره تلاش کنید.";
         console.error("Chat Error:", err);
+      }
     }
-
     window.send = send;
 
-    function createLocalReply(text) {
-      const clean = text.toLowerCase();
+    async function generateImage() {
+      const input = document.getElementById("msgInput");
+      const prompt = input.value.trim();
 
-      if (clean.includes("سلام")) {
-        return "سلام! من ATLAS هستم. چطور می‌تونم کمکت کنم؟";
+      if (!prompt) {
+        alert("لطفاً ابتدا توصیف تصویر را بنویسید.");
+        return;
       }
 
-      if (clean.includes("سایدبار") || clean.includes("نوار")) {
-        return "سایدبار سمت راست فعال است. می‌توانی گفتگوی جدید بسازی، تاریخچه را ببینی، تم را عوض کنی یا چت را پاک کنی.";
-      }
+      addMsg(prompt, "user");
+      input.value = "";
+      refreshHistoryPreview("🎨 تصویر: " + prompt);
 
-      if (clean.includes("supabase")) {
-        return "برای Supabase مطمئن شو جدول messages ستون‌های user_id، role، text و created_at را دارد و RLS Policy درست تنظیم شده است.";
-      }
+      const tempMsg = addMsg("در حال ساخت تصویر... 🎨", "bot");
 
-      return "پیامت دریافت و ذخیره شد. اگر می‌خواهی پاسخ هوش مصنوعی واقعی داشته باشی، باید یک API یا Edge Function به این بخش وصل شود.";
+      try {
+        const client = getAtlasSafeClient();
+        const { data, error } = await client.functions.invoke('atlas-image', {
+          body: { prompt: prompt }
+        });
+
+        if (error) throw error;
+
+        tempMsg.remove();
+
+        let imgUrl = "";
+        if (data && data.url) {
+          imgUrl = data.url;
+        } else if (data && data.data && data.data[0] && data.data[0].b64_json) {
+          imgUrl = "data:image/png;base64," + data.data[0].b64_json;
+        } else if (data && data.image) {
+          imgUrl = data.image;
+        }
+
+        if (imgUrl) {
+          addImageMsg(imgUrl, "bot");
+          await saveMsg("bot", `[تصویر تولید شده]: ${imgUrl}`);
+        } else {
+          addMsg("خطا: آدرس تصویر در پاسخ یافت نشد.", "bot");
+        }
+      } catch (err) {
+        tempMsg.textContent = "خطا در تولید تصویر: " + (err.message || "خطای نامشخص");
+        console.error(err);
+      }
     }
+    window.generateImage = generateImage;
+
+    function addImageMsg(url, role = "bot") {
+      const chat = document.getElementById("chat");
+      const msg = document.createElement("div");
+      msg.className = `msg ${role}`;
+
+      const img = document.createElement("img");
+      img.src = url;
+      img.style.maxWidth = "100%";
+      img.style.borderRadius = "10px";
+      img.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
+
+      msg.appendChild(img);
+      chat.appendChild(msg);
+      chat.scrollTop = chat.scrollHeight;
+    }
+    window.addImageMsg = addImageMsg;
 
     function handleInputKey(event) {
       if (event.key === "Enter" && !event.shiftKey) {
@@ -987,7 +984,6 @@ async function send() {
         send();
       }
     }
-
     window.handleInputKey = handleInputKey;
 
     function refreshHistoryPreview(text) {
@@ -996,7 +992,7 @@ async function send() {
       if (!historyList) return;
 
       const empty = historyList.querySelector(".history-item");
-      if (empty && empty.textContent.includes("هنوز گفتگویی")) {
+      if (empty && (empty.textContent.includes("هنوز گفتگویی") || empty.textContent.includes("بعد از ورود"))) {
         historyList.innerHTML = "";
       }
 
@@ -1019,7 +1015,6 @@ async function send() {
 
       document.body.classList.remove("sidebar-open");
     }
-
     window.newChat = newChat;
 
     function clearChat() {
@@ -1032,40 +1027,39 @@ async function send() {
       chat.dataset.ready = "";
       showWelcome();
     }
-
     window.clearChat = clearChat;
 
     function showSaved() {
       addSystemMsg("بخش ذخیره‌شده‌ها هنوز به دیتابیس وصل نشده است.");
       document.body.classList.remove("sidebar-open");
     }
-
     window.showSaved = showSaved;
 
     function showTools() {
       addSystemMsg("بخش ابزارها آماده است؛ می‌توانی بعداً ابزارهای دلخواهت را اینجا اضافه کنی.");
       document.body.classList.remove("sidebar-open");
     }
-
     window.showTools = showTools;
 
     function toggleTheme() {
       document.body.classList.toggle("light");
     }
-
     window.toggleTheme = toggleTheme;
 
     function toggleSidebar() {
       document.body.classList.toggle("sidebar-open");
     }
-
     window.toggleSidebar = toggleSidebar;
 
     async function logout() {
       const client = getAtlasSafeClient();
 
       if (client) {
-        await client.auth.signOut();
+        try {
+          await client.auth.signOut();
+        } catch (err) {
+          console.error(err);
+        }
       }
 
       window.user = null;
@@ -1079,7 +1073,6 @@ async function send() {
       document.getElementById("historyList").innerHTML =
         `<div class="history-item">بعد از ورود، پیام‌های ذخیره‌شده اینجا دیده می‌شوند.</div>`;
     }
-
     window.logout = logout;
 
     restoreSession();
@@ -1217,176 +1210,7 @@ async function send() {
 
     resizeCanvas();
     animateSpace();
-  async function generateImage() {
-    const input = document.getElementById('msgInput'); // مطمئن شو آی‌دی درست است
-    const prompt = input.value.trim();
-    if (!prompt) return alert("لطفاً توصیف تصویر را بنویسید!");
-
-    window.addMsg("در حال تولید تصویر: " + prompt, 'user');
-    const originalPlaceholder = input.placeholder;
-    input.value = '';
-    input.placeholder = "لطفاً صبر کنید...";
-    input.disabled = true;
-
-    try {
-        // فراخوانی Edge Function از طریق کلاینت Supabase
-        const { data, error } = await client.functions.invoke('atlas-image', {
-            body: { prompt: prompt }
-        });
-
-        if (error) throw error;
-
-        if (data && data.data && data.data[0].b64_json) {
-            const imgUrl = "data:image/png;base64," + data.data[0].b64_json;
-            window.addMsg(`<img src="${imgUrl}" style="width:100%; border-radius:10px; margin-top:10px;" />`, 'bot');
-        }
-    } catch (err) {
-        console.error("Image Error:", err);
-        window.addMsg("خطا در تولید تصویر. لطفاً دوباره تلاش کنید.", 'bot');
-    } finally {
-        input.placeholder = originalPlaceholder;
-        input.disabled = false;
-    }
-} 
-  async function generateImage() {
-  const input = document.getElementById("prompt"); // یا نام آیدی ورودی متن شما
-  const prompt = input.value.trim();
-  
-  if (!prompt) {
-    alert("لطفاً ابتدا توصیف تصویر را بنویسید.");
-    return;
-  }
-
-  // نمایش پیام در حال بارگذاری
-  const tempMsg = addMsg("در حال ساخت تصویر... 🎨", "bot");
-  input.value = "";
-
-  try {
-    const client = getAtlasSafeClient(); // تابع کلاینت شما
-    const { data, error } = await client.functions.invoke('atlas-image', {
-      body: { prompt: prompt }
-    });
-
-    if (error) throw error;
-
-    // حذف پیام "در حال ساخت" و نمایش تصویر
-    tempMsg.remove();
-    addImageMsg(data.url, "bot");
-    
-  } catch (err) {
-    tempMsg.textContent = "خطا در تولید تصویر: " + (err.message || "خطای نامشخص");
-    console.error(err);
-  }
-}
-
-// تابع کمکی برای نمایش تصویر بدون تغییر در addMsg اصلی
-function addImageMsg(url, role = "bot") {
-  const chat = document.getElementById("chat");
-  const msg = document.createElement("div");
-  msg.className = `msg ${role}`;
-  
-  const img = document.createElement("img");
-  img.src = url;
-  img.style.maxWidth = "100%";
-  img.style.borderRadius = "10px";
-  img.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
-  
-  msg.appendChild(img);
-  chat.appendChild(msg);
-  chat.scrollTop = chat.scrollHeight;
-}
-window.login = async function () {
-  try {
-    const emailInput =
-      document.getElementById("email") ||
-      document.getElementById("loginEmail") ||
-      document.querySelector('input[type="email"]');
-
-    const passwordInput =
-      document.getElementById("password") ||
-      document.getElementById("loginPassword") ||
-      document.querySelector('input[type="password"]');
-
-    if (!emailInput || !passwordInput) {
-      alert("فیلد ایمیل یا رمز عبور پیدا نشد.");
-      return;
-    }
-
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
-
-    if (!email || !password) {
-      alert("ایمیل و رمز عبور را وارد کن.");
-      return;
-    }
-
-    if (!window.client && typeof client === "undefined") {
-      alert("اتصال Supabase پیدا نشد.");
-      return;
-    }
-
-    const supabaseClient = window.client || client;
-
-    let { data, error } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (error) {
-      const signup = await supabaseClient.auth.signUp({
-        email,
-        password
-      });
-
-      data = signup.data;
-      error = signup.error;
-    }
-
-    if (error) {
-      alert("خطا در ورود یا ثبت‌نام: " + error.message);
-      console.error("Login error:", error);
-      return;
-    }
-
-    alert("ورود موفق بود.");
-
-    console.log("Auth data:", data);
-
-    if (typeof showApp === "function") {
-      showApp();
-    }
-
-    if (typeof loadUserData === "function") {
-      loadUserData();
-    }
-
-  } catch (err) {
-    console.error("Login fatal error:", err);
-    alert("خطای غیرمنتظره در ورود.");
-  }
-};
-
-window.logout = async function () {
-  try {
-    if (!window.client && typeof client === "undefined") {
-      alert("اتصال Supabase پیدا نشد.");
-      return;
-    }
-
-    const supabaseClient = window.client || client;
-
-    await supabaseClient.auth.signOut();
-
-    alert("خارج شدی.");
-
-    location.reload();
-
-  } catch (err) {
-    console.error("Logout error:", err);
-    alert("خطا در خروج از حساب.");
-  }
-};
-</script>
+  </script>
 
 </body>
 </html>
