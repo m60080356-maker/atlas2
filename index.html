@@ -732,7 +732,8 @@
       chat.scrollTop = chat.scrollHeight;
     }
 
-    async function login() {
+   window.login = async function login() {
+      async function login() {
       const client = getAtlasSafeClient();
       if (!client) return;
 
