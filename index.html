@@ -732,32 +732,67 @@
       chat.scrollTop = chat.scrollHeight;
     }
 
-   window.login = async function login() {
-      async function login() {
-      const client = getAtlasSafeClient();
-      if (!client) return;
+ window.login = async function login() {
+  try {
+    // ۱. گرفتن اتصال Supabase
+    let client;
+    if (typeof getAtlasSafeClient === "function") {
+      client = getAtlasSafeClient();
+    } else if (window.client) {
+      client = window.client;
+    }
 
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
+    if (!client) {
+      alert("خطا: سیستم قادر به برقراری ارتباط با دیتابیس نیست.");
+      return;
+    }
 
-      if (!email || !password) {
-        alert("ایمیل و رمز عبور را وارد کن.");
-        return;
-      }
+    // ۲. گرفتن مقادیر ایمیل و رمز عبور
+    const emailInput = document.getElementById("email") || document.getElementById("loginEmail");
+    const passwordInput = document.getElementById("password") || document.getElementById("loginPassword");
 
-      try {
-        let result = await client.auth.signInWithPassword({
-          email,
-          password
-        });
+    if (!emailInput || !passwordInput) {
+      alert("فیلدهای ورود پیدا نشدند.");
+      return;
+    }
 
-        if (result.error) {
-          result = await client.auth.signUp({
-            email,
-            password
-          });
-        }
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
 
+    if (!email || !password) {
+      alert("لطفاً ایمیل و رمز عبور را وارد کنید.");
+      return;
+    }
+
+    // ۳. تلاش برای ورود
+    let { data, error } = await client.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
+
+    // ۴. اگر کاربر وجود نداشت، تلاش برای ثبت‌نام (اختیاری - بر اساس منطق قبلی شما)
+    if (error) {
+      const signup = await client.auth.signUp({ email, password });
+      data = signup.data;
+      error = signup.error;
+    }
+
+    if (error) {
+      alert("خطا در ورود: " + error.message);
+      return;
+    }
+
+    alert("خوش آمدید! ورود موفقیت‌آمیز بود.");
+    
+    // اجرای توابع بعد از ورود موفق (اگر در کد شما وجود دارند)
+    if (typeof showApp === "function") showApp();
+    if (typeof loadUserData === "function") loadUserData();
+    
+  } catch (err) {
+    console.error(err);
+    alert("یک خطای سیستمی رخ داد.");
+  }
+};
         if (result.error) {
           console.error(result.error);
           alert("خطای ورود یا ثبت‌نام: " + result.error.message);
