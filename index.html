@@ -731,32 +731,49 @@
       chat.appendChild(msg);
       chat.scrollTop = chat.scrollHeight;
     }
-      window.login = async function login() {
-  try {
-    let client;
-    
-    // ۱. چک کردن متغیر عمومی supabase (اگر از CDN استفاده کردی)
-    if (window.supabase) {
-        client = window.supabase;
-    }
-    // ۲. روش قبلی خودت
-    else if (typeof getAtlasSafeClient === "function") {
-      client = getAtlasSafeClient();
-    } 
-    // ۳. چک کردن متغیر window.client
-    else if (window.client) {
-      client = window.client;
-    }
+window.login = async function login() {
+    try {
+        // ۱. چک کردن متغیرهای احتمالی که کلاینت داخلشان است
+        let client = null;
+        
+        if (typeof getAtlasSafeClient === "function") {
+            client = getAtlasSafeClient();
+        }
+        if (!client && window.client) client = window.client;
+        if (!client && window.supabase) client = window.supabase;
 
-    // دیباگ: اگر باز هم پیدا نشد، در کنسول مرورگر لاگ می‌اندازیم
-    if (!client) {
-      console.log("Supabase Client check failed:");
-      console.log("Is window.supabase defined?", !!window.supabase);
-      console.log("Is getAtlasSafeClient a function?", typeof getAtlasSafeClient);
-      alert("اتصال Supabase پیدا نشد. لطفاً کنسول مرورگر را چک کنید.");
-      return;
+        // ۲. اگر باز هم پیدا نشد، یک پیغام شفاف با جزئیات به ما بده
+        if (!client) {
+            let debugMsg = "خطای اتصال:\n";
+            debugMsg += "getAtlasSafeClient وجود دارد؟ " + (typeof getAtlasSafeClient === "function") + "\n";
+            debugMsg += "window.client وجود دارد؟ " + (!!window.client) + "\n";
+            debugMsg += "window.supabase وجود دارد؟ " + (!!window.supabase);
+            alert(debugMsg);
+            return;
+        }
+
+        // ۳. گرفتن ایمیل و رمز
+        const email = document.getElementById("email")?.value || document.getElementById("loginEmail")?.value;
+        const password = document.getElementById("password")?.value || document.getElementById("loginPassword")?.value;
+
+        if (!email || !password) {
+            alert("ایمیل یا رمز وارد نشده!");
+            return;
+        }
+
+        // ۴. لاگین
+        let { data, error } = await client.auth.signInWithPassword({ email, password });
+        
+        if (error) {
+            alert("خطای سوپابیس: " + error.message);
+        } else {
+            alert("ورود موفق!");
+        }
+
+    } catch (err) {
+        alert("خطای غیرمنتظره: " + err.message);
     }
-    
+};
     // ادامه کد بقیه ...
 
     // ۴. اگر کاربر وجود نداشت، تلاش برای ثبت‌نام (اختیاری - بر اساس منطق قبلی شما)
