@@ -917,7 +917,7 @@ async function send() {
   let botText = "";
 
   try {
-    const { data, error } = await client.functions.invoke("atlas-chat", {
+    const { data, error } = await client.functions.invoke("atlas_chat", {
       body: {
         message: text,
         user_id: activeUser.id
@@ -925,7 +925,7 @@ async function send() {
     });
 
     if (error) {
-      console.error("atlas-chat function error:", error);
+      console.error("atlas_chat function error:", error);
       throw error;
     }
 
@@ -934,11 +934,11 @@ async function send() {
       data?.message ||
       data?.text ||
       data?.answer ||
-      "پاسخی از تابع atlas-chat دریافت نشد.";
+      "پاسخی از تابع atlas_chat دریافت نشد.";
   } catch (err) {
-    console.error("Failed to call atlas-chat:", err);
+    console.error("Failed to call atlas_chat:", err);
     botText = "متأسفم، مشکلی در اتصال به سرویس چت پیش آمد. لطفاً دوباره تلاش کنید.";
-    addSystemMsg("خطا در فراخوانی Edge Function atlas-chat. Deploy، نام تابع و CORS را بررسی کن.");
+    addSystemMsg("خطا در فراخوانی Edge Function atlas_chat. Deploy، نام تابع و CORS را بررسی کن.");
   }
 
   addMsg(botText, "bot");
