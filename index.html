@@ -586,7 +586,6 @@
               autocomplete="off"
               onkeydown="handleInputKey(event)"
             />
-            <button id="imgBtn" onclick="generateImage()" style="background: #ff00ff; color: #fff;">🎨</button>
             <button class="send-btn" onclick="send()" title="ارسال">➤</button>
           </div>
         </div>
@@ -608,7 +607,6 @@
       <button class="side-btn" onclick="loadHistory()">🕘 تاریخچه</button>
       <button class="side-btn" onclick="showSaved()">⭐ ذخیره‌شده‌ها</button>
       <button class="side-btn" onclick="showTools()">🧰 ابزارها</button>
-      <button class="side-btn" onclick="toggleTheme()">🌗 تغییر تم</button>
 
       <div class="side-section-title">گفتگوها</div>
       <div id="historyList" class="history-list">
@@ -855,50 +853,103 @@
     }
     window.loadHistory = loadHistory;
 
-    async function saveMsg(role, text) {
-      const client = getAtlasSafeClient();
-      const activeUser = window.user || window.currentUser;
+async function saveMsg(role, text) {
+  const client = getAtlasSafeClient();
+  const activeUser = window.user || window.currentUser;
 
-      if (!client || !activeUser || !activeUser.id) return;
+  if (!client) {
+    throw new Error("Supabase client is not available.");
+  }
 
-      try {
-        const { error } = await client.from("messages").insert({
-          user_id: activeUser.id,
-          role: role,
-          text: text
-        });
+  if (!activeUser || !activeUser.id) {
+    throw new Error("Active user is not available.");
+  }
 
-        if (error) {
-          console.error(error);
-          addSystemMsg("پیام در Supabase ذخیره نشد. جدول messages یا RLS را بررسی کن.");
-        }
-      } catch (err) {
-        console.error(err);
+  const { error } = await client.from("messages").insert({
+    user_id: activeUser.id,
+    role,
+    text
+  });
+
+  if (error) {
+    console.error("saveMsg error:", error);
+    throw error;
+  }
+
+  return true;
+}
+
+async function send() {
+  const input = document.getElementById("msgInput");
+  const text = input.value.trim();
+
+  if (!text) return;
+
+  input.value = "";
+
+  addMsg(text, "user");
+
+  try {
+    await saveMsg("user", text);
+  } catch (err) {
+    console.error("Failed to save user message:", err);
+    addSystemMsg("پیام کاربر در Supabase ذخیره نشد.");
+  }
+
+  const client = getAtlasSafeClient();
+  const activeUser = window.user || window.currentUser;
+
+  if (!client) {
+    addSystemMsg("اتصال Supabase در دسترس نیست.");
+    return;
+  }
+
+  if (!activeUser || !activeUser.id) {
+    addSystemMsg("کاربر وارد حساب نشده یا اطلاعات کاربر در دسترس نیست.");
+    return;
+  }
+
+  let botText = "";
+
+  try {
+    const { data, error } = await client.functions.invoke("atlas-chat", {
+      body: {
+        message: text,
+        user_id: activeUser.id
       }
+    });
+
+    if (error) {
+      console.error("atlas-chat function error:", error);
+      throw error;
     }
-    window.saveMsg = saveMsg;
 
-    async function send() {
-      const input = document.getElementById("msgInput");
-      const text = input.value.trim();
+    botText =
+      data?.reply ||
+      data?.message ||
+      data?.text ||
+      data?.answer ||
+      "پاسخی از تابع atlas-chat دریافت نشد.";
 
-      if (!text) return;
+  } catch (err) {
+    console.error("Failed to call atlas-chat:", err);
 
-      addMsg(text, "user");
-      input.value = "";
+    botText = "متأسفم، مشکلی در اتصال به سرویس چت پیش آمد. لطفاً دوباره تلاش کنید.";
 
-      await saveMsg("user", text);
-      refreshHistoryPreview(text);
+    addSystemMsg("خطا در فراخوانی Edge Function atlas-chat. Deploy، نام تابع و CORS را بررسی کن.");
+  }
 
-      const typingMsg = addMsg("در حال فکر کردن... 🤔", "bot");
+  addMsg(botText, "bot");
 
-      try {
-        const client = getAtlasSafeClient();
+  try {
+    await saveMsg("bot", botText);
+  } catch (err) {
+    console.error("Failed to save bot message:", err);
+    addSystemMsg("پاسخ بات در Supabase ذخیره نشد.");
+  }
 
-        const { data, error } = await client.functions.invoke('atlas-chat', {
-          body: { message: text }
-        });
-
+  refreshHistoryPreview(text);
+};
         if (error) throw error;
 
         if (data && data.reply) {
