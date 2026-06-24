@@ -854,23 +854,39 @@
     window.loadHistory = loadHistory;
 
 async function saveMsg(role, text) {
-  if (!text || text.trim() === "") {
-    console.error("پیام خالی است، ذخیره نمی‌شود.");
+  // ۱. بررسی محتوا
+  if (!text) {
+    console.warn("پیام خالی است و ذخیره نمی‌شود.");
     return;
   }
-  
-  const { error } = await supabase
+
+  // ۲. مدیریت conversation_id (اگر هنوز نداریم، بساز)
+  if (!window.currentConversationId) {
+    window.currentConversationId = crypto.randomUUID(); // ساخت یک ID تصادفی
+    console.log("شناسه مکالمه جدید ساخته شد:", window.currentConversationId);
+  }
+
+  console.log("در حال تلاش برای ذخیره در Supabase:", { role, text, id: window.currentConversationId });
+
+  // ۳. ارسال به دیتابیس
+  const { data, error } = await supabase
     .from('messages')
     .insert([
       { 
         role: role, 
-        content: text, // مطمئن شو این فیلد text است
-        conversation_id: window.currentConversationId // حتماً باید این متغیر تعریف شده باشد
+        content: text, 
+        conversation_id: window.currentConversationId // استفاده از متغیر سراسری
       }
     ]);
 
-  if (error) throw error;
+  if (error) {
+    console.error("خطای ذخیره در دیتابیس:", error);
+    throw error;
+  }
+  
+  console.log("پیام با موفقیت ذخیره شد.");
 }
+
 
 
 async function send() {
