@@ -932,9 +932,7 @@ async function send() {
       "پاسخی از تابع atlas-chat دریافت نشد.";
   } catch (err) {
     console.error("Failed to call atlas-chat:", err);
-
     botText = "متأسفم، مشکلی در اتصال به سرویس چت پیش آمد. لطفاً دوباره تلاش کنید.";
-
     addSystemMsg("خطا در فراخوانی Edge Function atlas-chat. Deploy، نام تابع و CORS را بررسی کن.");
   }
 
@@ -950,7 +948,7 @@ async function send() {
   refreshHistoryPreview(text);
 }
 window.send = send;
-
+    
     async function generateImage() {
       const input = document.getElementById("msgInput");
       const prompt = input.value.trim();
