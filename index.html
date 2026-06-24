@@ -930,7 +930,6 @@ async function send() {
       data?.text ||
       data?.answer ||
       "پاسخی از تابع atlas-chat دریافت نشد.";
-
   } catch (err) {
     console.error("Failed to call atlas-chat:", err);
 
@@ -949,21 +948,8 @@ async function send() {
   }
 
   refreshHistoryPreview(text);
-};
-        if (error) throw error;
-
-        if (data && data.reply) {
-          typingMsg.textContent = data.reply;
-          await saveMsg("bot", data.reply);
-        } else {
-          typingMsg.textContent = "پاسخ معتبری از هوش مصنوعی دریافت نشد.";
-        }
-      } catch (err) {
-        typingMsg.textContent = "متأسفم، مشکلی در اتصال پیش آمد. دوباره تلاش کنید.";
-        console.error("Chat Error:", err);
-      }
-    }
-    window.send = send;
+}
+window.send = send;
 
     async function generateImage() {
       const input = document.getElementById("msgInput");
