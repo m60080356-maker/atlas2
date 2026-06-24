@@ -857,26 +857,31 @@ async function saveMsg(role, text) {
   const client = getAtlasSafeClient();
   const activeUser = window.user || window.currentUser;
 
-  if (!client) {
-    throw new Error("Supabase client is not available.");
+  if (!client || !activeUser || !activeUser.id) return;
+
+  try {
+    let conversationId = window.conversationId || localStorage.getItem("conversation_id");
+
+    if (!conversationId) {
+      conversationId = crypto.randomUUID();
+      window.conversationId = conversationId;
+      localStorage.setItem("conversation_id", conversationId);
+    }
+
+    const { error } = await client.from("messages").insert({
+      user_id: activeUser.id,
+      conversation_id: conversationId,
+      role: role,
+      text: text
+    });
+
+    if (error) {
+      console.error(error);
+      addSystemMsg("پیام در Supabase ذخیره نشد. جدول messages یا RLS را بررسی کن.");
+    }
+  } catch (err) {
+    console.error(err);
   }
-
-  if (!activeUser || !activeUser.id) {
-    throw new Error("Active user is not available.");
-  }
-
-  const { error } = await client.from("messages").insert({
-    user_id: activeUser.id,
-    role,
-    text
-  });
-
-  if (error) {
-    console.error("saveMsg error:", error);
-    throw error;
-  }
-
-  return true;
 }
 
 async function send() {
