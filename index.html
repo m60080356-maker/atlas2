@@ -903,32 +903,27 @@ async function send() {
   if (!text) return;
 
   input.value = "";
-
   addMsg(text, "user");
 
   try {
     await saveMsg("user", text);
   } catch (err) {
     console.error("Failed to save user message:", err);
-    addSystemMsg("پیام کاربر در Supabase ذخیره نشد.");
   }
 
   const client = getAtlasSafeClient();
-  const activeUser = window.user || window.currentUser;
+  // اصلاح: اگر کاربر لاگین نبود، یک آی‌دی موقت بده تا متوقف نشود
+  const activeUser = window.user || window.currentUser || { id: 'anonymous_user' };
 
   if (!client) {
-    addSystemMsg("اتصال Supabase در دسترس نیست.");
-    return;
-  }
-
-  if (!activeUser || !activeUser.id) {
-    addSystemMsg("کاربر وارد حساب نشده یا اطلاعات کاربر در دسترس نیست.");
+    addSystemMsg("اتصال Supabase برقرار نیست.");
     return;
   }
 
   let botText = "";
 
   try {
+    // فراخوانی تابع اطلس
     const { data, error } = await client.functions.invoke("atlas_chat", {
       body: {
         message: text,
@@ -936,35 +931,28 @@ async function send() {
       }
     });
 
-    if (error) {
-      console.error("atlas_chat function error:", error);
-      throw error;
+    if (error) throw error;
+
+    // بررسی دقیق‌تر پاسخ
+    botText = data?.reply || data?.message || data?.text || data?.answer;
+    
+    if (!botText) {
+        botText = "پاسخی از هوش مصنوعی دریافت نشد (دیتای خالی).";
     }
 
-    botText =
-      data?.reply ||
-      data?.message ||
-      data?.text ||
-      data?.answer ||
-      "پاسخی از تابع atlas_chat دریافت نشد.";
   } catch (err) {
-    console.error("Failed to call atlas_chat:", err);
-    botText = "متأسفم، مشکلی در اتصال به سرویس چت پیش آمد. لطفاً دوباره تلاش کنید.";
-    addSystemMsg("خطا در فراخوانی Edge Function atlas_chat. Deploy، نام تابع و CORS را بررسی کن.");
+    console.error("Error calling Edge Function:", err);
+    botText = "خطا در اتصال به هوش مصنوعی. مطمئن شوید تابع atlas_chat در Supabase دیپلوی شده است.";
   }
 
   addMsg(botText, "bot");
-
   try {
     await saveMsg("bot", botText);
   } catch (err) {
     console.error("Failed to save bot message:", err);
-    addSystemMsg("پاسخ بات در Supabase ذخیره نشد.");
   }
-
-  refreshHistoryPreview(text);
 }
-window.send = send;
+
     
     async function generateImage() {
       const input = document.getElementById("msgInput");
