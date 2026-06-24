@@ -854,35 +854,24 @@
     window.loadHistory = loadHistory;
 
 async function saveMsg(role, text) {
-  const client = getAtlasSafeClient();
-  const activeUser = window.user || window.currentUser;
-
-  if (!client || !activeUser || !activeUser.id) return;
-
-  try {
-    let conversationId = window.conversationId || localStorage.getItem("conversation_id");
-
-    if (!conversationId) {
-      conversationId = crypto.randomUUID();
-      window.conversationId = conversationId;
-      localStorage.setItem("conversation_id", conversationId);
-    }
-
-    const { error } = await client.from("messages").insert({
-      user_id: activeUser.id,
-      conversation_id: conversationId,
-      role: role,
-      text: text
-    });
-
-    if (error) {
-      console.error(error);
-      addSystemMsg("پیام در Supabase ذخیره نشد. جدول messages یا RLS را بررسی کن.");
-    }
-  } catch (err) {
-    console.error(err);
+  if (!text || text.trim() === "") {
+    console.error("پیام خالی است، ذخیره نمی‌شود.");
+    return;
   }
+  
+  const { error } = await supabase
+    .from('messages')
+    .insert([
+      { 
+        role: role, 
+        content: text, // مطمئن شو این فیلد text است
+        conversation_id: window.currentConversationId // حتماً باید این متغیر تعریف شده باشد
+      }
+    ]);
+
+  if (error) throw error;
 }
+
 
 async function send() {
   const input = document.getElementById("msgInput");
