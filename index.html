@@ -853,47 +853,13 @@
     }
     window.loadHistory = loadHistory;
 
-async function saveMsg(role, text) {
-  // ۱. گرفتن کلاینتِ فعال (همان تابعی که در send استفاده کردید)
-  const client = getAtlasSafeClient();
-  
-  if (!client) {
-    console.error("کلاینت Supabase در دسترس نیست!");
-    return;
-  }
-
-  if (!text) {
-    console.warn("پیام خالی است.");
-    return;
-  }
-
-  // ۲. مدیریت conversation_id
-  if (!window.currentConversationId) {
-    window.currentConversationId = crypto.randomUUID();
-  }
-
-  console.log("در حال ذخیره با استفاده از client:", { role, text });
-
-  // ۳. ارسال به دیتابیس (استفاده از client به جای supabase)
-  const { data, error } = await client
-    .from('messages')
-    .insert([
-      { 
-        role: role, 
-        content: text, 
-        conversation_id: window.currentConversationId
-      }
-    ]);
-
-  if (error) {
-    console.error("خطای دیتابیس:", error);
-    throw error;
-  }
-  
-  console.log("پیام با موفقیت ذخیره شد.");
-}
-
-
+const { error } = await supabase
+  .from('messages')
+  .insert([{
+    role: role,
+    content: text,
+    conversation_id: conversationId
+  }]);
 
 
 async function send() {
