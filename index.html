@@ -1302,6 +1302,79 @@ function appendMessage(role, text) {
 }
 
   </script>
+<script>
+  window.login = async function login() {
+    console.log("login clicked");
+
+    try {
+      const emailInput =
+        document.getElementById("email") ||
+        document.getElementById("loginEmail") ||
+        document.getElementById("authEmail") ||
+        document.querySelector('input[type="email"]');
+
+      const passwordInput =
+        document.getElementById("password") ||
+        document.getElementById("loginPassword") ||
+        document.getElementById("authPassword") ||
+        document.querySelector('input[type="password"]');
+
+      if (!emailInput || !passwordInput) {
+        alert("فیلد ایمیل یا رمز عبور پیدا نشد.");
+        console.error("email/password input not found");
+        return;
+      }
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!email || !password) {
+        alert("ایمیل و رمز عبور را وارد کنید.");
+        return;
+      }
+
+      if (!window.supabase) {
+        alert("کتابخانه Supabase لود نشده است.");
+        console.error("window.supabase is not available");
+        return;
+      }
+
+      if (!window.atlasClient) {
+        window.atlasClient = window.supabase.createClient(
+          SUPABASE_URL,
+          SUPABASE_ANON_KEY
+        );
+      }
+
+      const { data, error } = await window.atlasClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        console.error("Login error:", error);
+        alert("ورود ناموفق: " + error.message);
+        return;
+      }
+
+      console.log("Login success:", data);
+      alert("ورود موفق بود.");
+
+      // اگر بعد از ورود باید صفحه چت نمایش داده شود، اینجا فعالش کن
+      const authBox = document.getElementById("authBox");
+      const chatBox = document.getElementById("chatBox");
+      const appShell = document.querySelector(".app-shell");
+
+      if (authBox) authBox.style.display = "none";
+      if (chatBox) chatBox.style.display = "block";
+      if (appShell) appShell.classList.add("logged-in");
+
+    } catch (err) {
+      console.error("Unexpected login error:", err);
+      alert("خطای غیرمنتظره هنگام ورود.");
+    }
+  };
+</script>
 
 </body>
 </html>
