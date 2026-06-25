@@ -624,7 +624,7 @@
   <script>
     const SUPABASE_URL = "https://atjzqpaxdyywdwidyyvz.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0anpxcGF4ZHl5d2R3aWR5eXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MTgzNzYsImV4cCI6MjA5NzQ5NDM3Nn0.xfUqnGj4rByYD3ujeSNQpxpczhNZ2453FrWJ7IeY_3A";
-
+    
     let atlasSafeClient = null;
 
     window.user = null;
@@ -853,22 +853,53 @@
     }
     window.loadHistory = loadHistory;
 
-// تابع اصلی برای ارسال پیام
+    // تابع اصلی برای ارسال پیام
 async function send() {
-    // ۱. پیدا کردن اینپوت با آی‌دی صحیح (msgInput)
-    const input = document.getElementById('msgInput');
+    const input = document.getElementById('msginput'); 
+    if (!input) return;
     
-    if (!input) {
-        console.error("خطا: المان msgInput یافت نشد!");
-        return;
-    }
-
     const message = input.value.trim();
     if (!message) return;
 
-    // ۲. نمایش پیام کاربر در چت
+    // نمایش پیام کاربر
     appendMessage('user', message);
-    input.value = ''; // پاک کردن باکس متن;
+    input.value = '';
+
+    try {
+        // استفاده از window.supabase برای اطمینان از دسترسی به متغیر سراسری
+        // همچنین چک می‌کنیم که .functions وجود داشته باشد
+        if (!window.supabase || !window.supabase.functions) {
+            console.error("Supabase Functions is not initialized yet.");
+            appendMessage('bot', "سیستم هنوز آماده نیست، لحظاتی صبر کنید و دوباره تلاش کنید.");
+            return;
+        }
+
+        const { data, error } = await window.supabase.functions.invoke('atlas_chat', {
+            body: { message: message }
+        });
+
+        if (error) {
+            console.error("Edge Function Error:", error);
+            appendMessage('bot', "خطایی در پردازش پیام رخ داد: " + error.message);
+            return;
+        }
+
+        if (data && data.reply) {
+            appendMessage('bot', data.reply);
+            // ذخیره در دیتابیس
+            if (typeof saveMsg === "function") {
+                saveMsg(message, data.reply);
+            }
+        } else {
+            appendMessage('bot', "پاسخی دریافت نشد.");
+        }
+
+    } catch (err) {
+        console.error("System Error:", err);
+        appendMessage('bot', "خطای سیستمی رخ داد.");
+    }
+}
+
 
     try {
         // ۲. فراخوانی Edge Function
