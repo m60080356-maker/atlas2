@@ -855,13 +855,20 @@
 
 // تابع اصلی برای ارسال پیام
 async function send() {
-    const input = document.getElementById('user-input');
+    // ۱. پیدا کردن اینپوت با آی‌دی صحیح (msgInput)
+    const input = document.getElementById('msgInput');
+    
+    if (!input) {
+        console.error("خطا: المان msgInput یافت نشد!");
+        return;
+    }
+
     const message = input.value.trim();
     if (!message) return;
 
-    // ۱. نمایش پیام کاربر در صفحه
+    // ۲. نمایش پیام کاربر در چت
     appendMessage('user', message);
-    input.value = '';
+    input.value = ''; // پاک کردن باکس متن;
 
     try {
         // ۲. فراخوانی Edge Function
