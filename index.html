@@ -855,55 +855,47 @@
 
 // تابع اصلی برای ارسال پیام
 async function send() {
-    // ۱. پیدا کردن اینپوت با آی‌دی صحیح (msgInput)
-    const input = document.getElementById('msgInput');
-    
-    if (!input) {
-        console.error("خطا: المان msgInput یافت نشد!");
-        return;
-    }
-
+    const input = document.getElementById('user-input');
     const message = input.value.trim();
     if (!message) return;
 
-    // ۲. نمایش پیام کاربر در چت
+    // ۱. نمایش پیام کاربر در صفحه
     appendMessage('user', message);
-    input.value = ''; // پاک کردن باکس متن
+    input.value = '';
 
     try {
-        // ۳. فراخوانی Edge Function (نام تابع شما در سـوپابیس atlas_chat است)
+        // ۲. فراخوانی Edge Function
         const { data, error } = await supabase.functions.invoke('atlas_chat', {
-            body: { prompt: message }
+            body: { message: message }
         });
 
+        // بررسی خطای سیستمی در فراخوانی تابع
         if (error) {
-            console.error('خطای سـوپابیس:', error);
-            appendMessage('bot', 'خطا در ارتباط با سرور.');
+            console.error("خطای فراخوانی تابع:", error);
+            appendMessage('bot', "خطا در ارتباط با سرور: " + error.message);
             return;
         }
 
-        // ۴. نمایش پاسخ هوش مصنوعی
+        // ۳. بررسی محتوای پاسخ
         if (data && data.reply) {
-            appendMessage('bot', data.reply);
+            const botReply = data.reply;
+            appendMessage('bot', botReply); // نمایش پاسخ هوش مصنوعی
             
-            // ۵. ذخیره در دیتابیس
-            saveMsg(message, data.reply);
+            // ۴. ذخیره در دیتابیس (اگر تابع saveMsg را دارید)
+            if (typeof saveMsg === "function") {
+                saveMsg(message, botReply);
+            }
         } else {
-            appendMessage('bot', 'هوش مصنوعی پاسخی نداد.');
+            console.error("پاسخ نامعتبر از دیتابیس:", data);
+            appendMessage('bot', "هوش مصنوعی پاسخی ارسال نکرد.");
         }
 
     } catch (err) {
-        console.error('خطای کلی:', err);
-        appendMessage('bot', 'مشکلی پیش آمد، دوباره تلاش کنید.');
+        console.error("خطای غیرمنتظره:", err);
+        appendMessage('bot', "خطای غیرمنتظره در اجرای برنامه.");
     }
 }
 
-// تابع برای اجرا با دکمه Enter
-function handleInputKey(event) {
-    if (event.key === 'Enter') {
-        send();
-    }
-}
 
     // متغیر سراسری برای نگه داشتن آی‌دی گفتگو (تا زمانی که صفحه رفرش نشود)
 let currentConversationId = crypto.randomUUID();
