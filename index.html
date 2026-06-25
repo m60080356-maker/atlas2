@@ -1246,6 +1246,31 @@ function newChat() {
 
     resizeCanvas();
     animateSpace();
+
+    // تابع نمایش پیام در صفحه چت
+function appendMessage(role, text) {
+    const chatContainer = document.getElementById('chat');
+    if (!chatContainer) {
+        console.error("المان chat پیدا نشد!");
+        return;
+    }
+
+    // ساخت یک ظرف برای پیام
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${role}-message`; // استایل بر اساس کاربر یا بات
+
+    // ساخت محتوای پیام
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+    contentDiv.innerText = text;
+
+    msgDiv.appendChild(contentDiv);
+    chatContainer.appendChild(msgDiv);
+
+    // اسکرول به پایین‌ترین بخش چت
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
   </script>
 
 </body>
