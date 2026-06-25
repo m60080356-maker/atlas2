@@ -1145,8 +1145,6 @@ function newChat() {
   </script>
 
   <script>
-    const SUPABASE_URL = "https://atjzqpaxdyywdwidyyvz.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0anpxcGF4ZHl5d2R3aWR5eXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MTgzNzYsImV4cCI6MjA5NzQ5NDM3Nn0.xfUqnGj4rByYD3ujeSNQpxpczhNZ2453FrWJ7IeY_3A";
     
     const canvas = document.getElementById("grokCanvas");
     const ctx = canvas.getContext("2d");
@@ -1306,6 +1304,10 @@ function appendMessage(role, text) {
 
   </script>
 <script>
+    const SUPABASE_URL = "https://atjzqpaxdyywdwidyyvz.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0anpxcGF4ZHl5d2R3aWR5eXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MTgzNzYsImV4cCI6MjA5NzQ5NDM3Nn0.xfUqnGj4rByYD3ujeSNQpxpczhNZ2453FrWJ7IeY_3A";
+
+  
   window.login = async function login() {
     console.log("login clicked");
 
@@ -1343,9 +1345,9 @@ function appendMessage(role, text) {
       }
 
       if (!window.atlasClient) {
-        window.atlasClient = window.supabase.createClient(
-          SUPABASE_URL,
-          SUPABASE_ANON_KEY
+window.atlasClient = window.supabase.createClient(
+  window.SUPABASE_URL,
+  window.SUPABASE_ANON_KEY
         );
       }
 
