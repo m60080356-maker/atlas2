@@ -852,14 +852,41 @@
       }
     }
     window.loadHistory = loadHistory;
+async function saveMsg(role, text) {
+    // گرفتن آی‌دی مکالمه از متغیر سراسری یا URL (مطمئن شوید conversationId تعریف شده باشد)
+    const urlParams = new URLSearchParams(window.location.search);
+    const conversationId = urlParams.get('id');
 
-const { error } = await supabase
-  .from('messages')
-  .insert([{
-    role: role,
-    content: text,
-    conversation_id: conversationId
-  }]);
+    console.log("در حال تلاش برای ذخیره پیام:", { role, text, conversationId });
+
+    try {
+        const { data, error } = await _supabase
+            .from('messages')
+            .insert([
+                {
+                    role: role,
+                    text: text, // تغییر نام ستون از content به text برای هماهنگی با دیتابیس شما
+                    conversation_id: conversationId
+                }
+            ])
+            .select();
+
+        if (error) {
+            console.error("خطای دقیق دیتابیس Supabase:", error);
+            // نمایش جزئیات بیشتر برای عیب‌یابی
+            if (error.code === '23502') {
+                console.error("نکته: ستون text یا conversation_id نمی‌تواند خالی باشد.");
+            }
+            throw error;
+        }
+
+        console.log("پیام با موفقیت ذخیره شد:", data);
+        return data;
+    } catch (err) {
+        console.error("خطای غیرمنتظره در saveMsg:", err.message);
+        return null;
+    }
+}
 
 
 async function send() {
@@ -919,7 +946,6 @@ async function send() {
   }
 }
 
-    
     async function generateImage() {
       const input = document.getElementById("msgInput");
       const prompt = input.value.trim();
