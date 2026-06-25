@@ -852,6 +852,7 @@
       }
     }
     window.loadHistory = loadHistory;
+    
 async function saveMsg(role, text) {
     // گرفتن آی‌دی مکالمه از متغیر سراسری یا URL (مطمئن شوید conversationId تعریف شده باشد)
     const urlParams = new URLSearchParams(window.location.search);
@@ -890,60 +891,39 @@ async function saveMsg(role, text) {
 
 
 async function send() {
-  const input = document.getElementById("msgInput");
-  const text = input.value.trim();
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (!message) return;
 
-  if (!text) return;
+    // ۱. نمایش پیام کاربر در صفحه
+    appendMessage('user', message);
+    input.value = '';
 
-  input.value = "";
-  addMsg(text, "user");
+    try {
+        // ۲. فراخوانی تابع atlas_chat
+        const response = await fetch('https://[PROJECT_ID].functions.supabase.co/atlas_chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: message }) // مطمئن شوید نام فیلد prompt است
+        });
 
-  try {
-    await saveMsg("user", text);
-  } catch (err) {
-    console.error("Failed to save user message:", err);
-  }
+        const data = await response.json();
 
-  const client = getAtlasSafeClient();
-  // اصلاح: اگر کاربر لاگین نبود، یک آی‌دی موقت بده تا متوقف نشود
-  const activeUser = window.user || window.currentUser || { id: 'anonymous_user' };
+        // ۳. بررسی اینکه آیا پاسخ هوش مصنوعی در دیتای برگشتی هست یا نه
+        if (data.reply) {
+            appendMessage('bot', data.reply);
+        } else if (data.error) {
+            console.error("خطای هوش مصنوعی:", data.error);
+            appendMessage('bot', "خطا: " + data.error);
+        } else {
+            console.log("پاسخ نامشخص:", data);
+            appendMessage('bot', "پاسخی دریافت نشد.");
+        }
 
-  if (!client) {
-    addSystemMsg("اتصال Supabase برقرار نیست.");
-    return;
-  }
-
-  let botText = "";
-
-  try {
-    // فراخوانی تابع اطلس
-    const { data, error } = await client.functions.invoke("atlas_chat", {
-      body: {
-        message: text,
-        user_id: activeUser.id
-      }
-    });
-
-    if (error) throw error;
-
-    // بررسی دقیق‌تر پاسخ
-    botText = data?.reply || data?.message || data?.text || data?.answer;
-    
-    if (!botText) {
-        botText = "پاسخی از هوش مصنوعی دریافت نشد (دیتای خالی).";
+    } catch (err) {
+        console.error("خطا در اتصال:", err);
+        appendMessage('bot', "متأسفانه مشکلی در اتصال پیش آمد.");
     }
-
-  } catch (err) {
-    console.error("Error calling Edge Function:", err);
-    botText = "خطا در اتصال به هوش مصنوعی. مطمئن شوید تابع atlas_chat در Supabase دیپلوی شده است.";
-  }
-
-  addMsg(botText, "bot");
-  try {
-    await saveMsg("bot", botText);
-  } catch (err) {
-    console.error("Failed to save bot message:", err);
-  }
 }
 
     async function generateImage() {
