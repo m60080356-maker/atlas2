@@ -852,99 +852,103 @@
       }
     }
     window.loadHistory = loadHistory;
-    
-async function saveMsg(role, text) {
-    // گرفتن آی‌دی مکالمه از متغیر سراسری یا URL (مطمئن شوید conversationId تعریف شده باشد)
-    const urlParams = new URLSearchParams(window.location.search);
-    const conversationId = urlParams.get('id');
 
-    console.log("در حال تلاش برای ذخیره پیام:", { role, text, conversationId });
-
-    try {
-        const { data, error } = await _supabase
-            .from('messages')
-            .insert([
-                {
-                    role: role,
-                    text: text, // تغییر نام ستون از content به text برای هماهنگی با دیتابیس شما
-                    conversation_id: conversationId
-                }
-            ])
-            .select();
-
-        if (error) {
-            console.error("خطای دقیق دیتابیس Supabase:", error);
-            // نمایش جزئیات بیشتر برای عیب‌یابی
-            if (error.code === '23502') {
-                console.error("نکته: ستون text یا conversation_id نمی‌تواند خالی باشد.");
-            }
-            throw error;
-        }
-
-        console.log("پیام با موفقیت ذخیره شد:", data);
-        return data;
-    } catch (err) {
-        console.error("خطای غیرمنتظره در saveMsg:", err.message);
-        return null;
-    }
-}
-
-
+// تابع اصلی برای ارسال پیام
 async function send() {
-    // پیدا کردن المان ورودی
-    const inputElement = document.getElementById('user-input');
+    // ۱. پیدا کردن اینپوت با آی‌دی صحیح (msgInput)
+    const input = document.getElementById('msgInput');
     
-    // تست: اگر المان پیدا نشد، در کنسول چاپ کن
-    if (!inputElement) {
-        alert("خطا: المانی با id='user-input' در صفحه پیدا نشد! لطفا کد HTML را چک کنید.");
+    if (!input) {
+        console.error("خطا: المان msgInput یافت نشد!");
         return;
     }
 
-    const message = inputElement.value.trim();
-    
-    // اگر کادر خالی بود، کاری انجام نده
+    const message = input.value.trim();
     if (!message) return;
 
-    // نمایش پیام کاربر در صفحه چت
+    // ۲. نمایش پیام کاربر در چت
     appendMessage('user', message);
-    
-    // خالی کردن کادر متن بعد از ارسال
-    inputElement.value = '';
+    input.value = ''; // پاک کردن باکس متن
 
     try {
-        // فراخوانی تابع با استفاده از کلاینت Supabase (مطمئن‌ترین راه)
+        // ۳. فراخوانی Edge Function (نام تابع شما در سـوپابیس atlas_chat است)
         const { data, error } = await supabase.functions.invoke('atlas_chat', {
             body: { prompt: message }
         });
 
         if (error) {
-            console.error('Edge Function Error:', error);
-            appendMessage('bot', 'خطا در ارتباط با هوش مصنوعی.');
+            console.error('خطای سـوپابیس:', error);
+            appendMessage('bot', 'خطا در ارتباط با سرور.');
             return;
         }
 
-        // نمایش پاسخ هوش مصنوعی
+        // ۴. نمایش پاسخ هوش مصنوعی
         if (data && data.reply) {
             appendMessage('bot', data.reply);
-            // ذخیره پیام در دیتابیس (اختیاری)
+            
+            // ۵. ذخیره در دیتابیس
             saveMsg(message, data.reply);
         } else {
-            appendMessage('bot', 'پاسخی از سمت سرور دریافت نشد.');
+            appendMessage('bot', 'هوش مصنوعی پاسخی نداد.');
         }
 
     } catch (err) {
-        console.error('Fetch Error:', err);
-        appendMessage('bot', 'مشکل در شبکه یا سرور.');
+        console.error('خطای کلی:', err);
+        appendMessage('bot', 'مشکلی پیش آمد، دوباره تلاش کنید.');
     }
 }
 
-// تابعی برای هندل کردن کلید Enter
+// تابع برای اجرا با دکمه Enter
 function handleInputKey(event) {
     if (event.key === 'Enter') {
         send();
     }
 }
 
+    // متغیر سراسری برای نگه داشتن آی‌دی گفتگو (تا زمانی که صفحه رفرش نشود)
+let currentConversationId = crypto.randomUUID();
+
+async function saveMsg(userText, botReply) {
+    try {
+        // ۱. دریافت اطلاعات کاربر لاگین شده
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        // اگر کاربر لاگین نکرده باشد، پیام ذخیره نمی‌شود (می‌توانید این شرط را بردارید)
+        if (!user) {
+            console.warn("کاربر لاگین نیست، پیام فقط نمایش داده می‌شود و ذخیره نمی‌شود.");
+            return;
+        }
+
+        // ۲. درج اطلاعات در جدول messages
+        const { data, error } = await supabase
+            .from('messages')
+            .insert([
+                {
+                    user_id: user.id,               // آی‌دی کاربر
+                    content: userText,              // متن پیام کاربر
+                    reply: botReply,                // متن پاسخ هوش مصنوعی
+                    conversation_id: currentConversationId, // آی‌دی یکتای این گفتگو
+                    created_at: new Date().toISOString()
+                }
+            ]);
+
+        if (error) {
+            // اگر با خطای RLS مواجه شدید، یعنی پالیسی Insert را در سوپابیس ننوشته‌اید
+            console.error("خطا در ذخیره دیتابیس:", error.message);
+        } else {
+            console.log("پیام با موفقیت در دیتابیس ذخیره شد.");
+        }
+    } catch (e) {
+        console.error("خطای غیرمنتظره در تابع saveMsg:", e);
+    }
+}
+
+// اگر بخواهید با زدن دکمه New Chat، گفتگو عوض شود:
+function newChat() {
+    document.getElementById('chat').innerHTML = ''; // پاک کردن صفحه
+    currentConversationId = crypto.randomUUID();    // ساخت آی‌دی جدید برای گفتگوی جدید
+    console.log("گفتگوی جدید شروع شد.");
+}
 
     async function generateImage() {
       const input = document.getElementById("msgInput");
