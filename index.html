@@ -891,38 +891,36 @@ async function saveMsg(role, text) {
 
 
 async function send() {
-    const input = document.getElementById('chat-input');
+    // امتحان کردن هر دو آی‌دی رایج در کد شما
+    const input = document.getElementById('user-input') || document.getElementById('msgInput');
+    
+    if (!input) {
+        console.error("خطا: المان ورودی متن پیدا نشد! لطفا ID را چک کنید.");
+        return;
+    }
+
     const message = input.value.trim();
     if (!message) return;
 
-    // ۱. نمایش پیام کاربر در صفحه
+    // نمایش پیام در صفحه
     appendMessage('user', message);
-    input.value = '';
+    input.value = ''; // پاک کردن باکس متن
 
     try {
-        // ۲. فراخوانی تابع atlas_chat
-        const response = await fetch('https://[PROJECT_ID].functions.supabase.co/atlas_chat', {
+        const response = await fetch('https://atjzqpaxdyywdwidyyvz.supabase.co/functions/v1/atlas_chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: message }) // مطمئن شوید نام فیلد prompt است
+            body: JSON.stringify({ prompt: message })
         });
 
         const data = await response.json();
-
-        // ۳. بررسی اینکه آیا پاسخ هوش مصنوعی در دیتای برگشتی هست یا نه
         if (data.reply) {
             appendMessage('bot', data.reply);
-        } else if (data.error) {
-            console.error("خطای هوش مصنوعی:", data.error);
-            appendMessage('bot', "خطا: " + data.error);
-        } else {
-            console.log("پاسخ نامشخص:", data);
-            appendMessage('bot', "پاسخی دریافت نشد.");
+            // ذخیره در دیتابیس
+            saveMsg(message, data.reply); 
         }
-
     } catch (err) {
-        console.error("خطا در اتصال:", err);
-        appendMessage('bot', "متأسفانه مشکلی در اتصال پیش آمد.");
+        console.error("Error:", err);
     }
 }
 
