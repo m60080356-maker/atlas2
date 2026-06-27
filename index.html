@@ -876,6 +876,8 @@ async function send() {
       body: { message: message }
     });
 
+    console.log("Sending to atlas_chat:", { message });
+
 console.error("Edge Function Error full:", error);
 console.log("error.message =", error?.message);
 console.log("error.name =", error?.name);
