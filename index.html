@@ -855,88 +855,50 @@
 
     // تابع اصلی برای ارسال پیام
 async function send() {
-    const input = document.getElementById('msginput'); 
-    if (!input) return;
-    
-    const message = input.value.trim();
-    if (!message) return;
+  const input = document.getElementById("msgInput");
+  if (!input) return;
 
-    // نمایش پیام کاربر
-    appendMessage('user', message);
-    input.value = '';
+  const message = input.value.trim();
+  if (!message) return;
 
-    try {
-        // استفاده از window.supabase برای اطمینان از دسترسی به متغیر سراسری
-        // همچنین چک می‌کنیم که .functions وجود داشته باشد
-        if (!window.supabase || !window.supabase.functions) {
-            console.error("Supabase Functions is not initialized yet.");
-            appendMessage('bot', "سیستم هنوز آماده نیست، لحظاتی صبر کنید و دوباره تلاش کنید.");
-            return;
-        }
+  addMsg(message, "user");
+  input.value = "";
 
-        const { data, error } = await window.supabase.functions.invoke('atlas_chat', {
-            body: { message: message }
-        });
+  try {
+    const client = getAtlasSafeClient();
 
-        if (error) {
-            console.error("Edge Function Error:", error);
-            appendMessage('bot', "خطایی در پردازش پیام رخ داد: " + error.message);
-            return;
-        }
-
-        if (data && data.reply) {
-            appendMessage('bot', data.reply);
-            // ذخیره در دیتابیس
-            if (typeof saveMsg === "function") {
-                saveMsg(message, data.reply);
-            }
-        } else {
-            appendMessage('bot', "پاسخی دریافت نشد.");
-        }
-
-    } catch (err) {
-        console.error("System Error:", err);
-        appendMessage('bot', "خطای سیستمی رخ داد.");
+    if (!client) {
+      addMsg("اتصال به Supabase برقرار نیست.", "bot");
+      return;
     }
+
+    const { data, error } = await client.functions.invoke("atlas_chat", {
+      body: { message: message }
+    });
+
+    if (error) {
+      console.error("Edge Function Error:", error);
+      addMsg("خطایی در پردازش پیام رخ داد: " + error.message, "bot");
+      return;
+    }
+
+    if (data && data.reply) {
+      addMsg(data.reply, "bot");
+
+      if (typeof saveMsg === "function") {
+        await saveMsg(message, data.reply);
+      }
+    } else {
+      console.error("Invalid response:", data);
+      addMsg("پاسخی دریافت نشد.", "bot");
+    }
+  } catch (err) {
+    console.error("System Error:", err);
+    addMsg("خطای سیستمی رخ داد.", "bot");
+  }
 }
 
-
-    try {
-        // ۲. فراخوانی Edge Function
-        const { data, error } = await supabase.functions.invoke('atlas_chat', {
-            body: { message: message }
-        });
-
-        // بررسی خطای سیستمی در فراخوانی تابع
-        if (error) {
-            console.error("خطای فراخوانی تابع:", error);
-            appendMessage('bot', "خطا در ارتباط با سرور: " + error.message);
-            return;
-        }
-
-        // ۳. بررسی محتوای پاسخ
-        if (data && data.reply) {
-            const botReply = data.reply;
-            appendMessage('bot', botReply); // نمایش پاسخ هوش مصنوعی
-            
-            // ۴. ذخیره در دیتابیس (اگر تابع saveMsg را دارید)
-            if (typeof saveMsg === "function") {
-                saveMsg(message, botReply);
-            }
-        } else {
-            console.error("پاسخ نامعتبر از دیتابیس:", data);
-            appendMessage('bot', "هوش مصنوعی پاسخی ارسال نکرد.");
-        }
-
-    } catch (err) {
-        console.error("خطای غیرمنتظره:", err);
-        appendMessage('bot', "خطای غیرمنتظره در اجرای برنامه.");
-    }
-}
-
-
-    // متغیر سراسری برای نگه داشتن آی‌دی گفتگو (تا زمانی که صفحه رفرش نشود)
-let currentConversationId = crypto.randomUUID();
+window.send = send;
 
 async function saveMsg(userText, botReply) {
     try {
@@ -1303,76 +1265,16 @@ function appendMessage(role, text) {
 }
 
   </script>
+  
 <script>
     const SUPABASE_URL = "https://atjzqpaxdyywdwidyyvz.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0anpxcGF4ZHl5d2R3aWR5eXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MTgzNzYsImV4cCI6MjA5NzQ5NDM3Nn0.xfUqnGj4rByYD3ujeSNQpxpczhNZ2453FrWJ7IeY_3A";
+    const SUPABASE_ANON_KEY = "...";
   
   window.login = async function login() {
     console.log("login clicked");
 
     try {
-      const emailInput =
-        document.getElementById("email") ||
-        document.getElementById("loginEmail") ||
-        document.getElementById("authEmail") ||
-        document.querySelector('input[type="email"]');
-
-      const passwordInput =
-        document.getElementById("password") ||
-        document.getElementById("loginPassword") ||
-        document.getElementById("authPassword") ||
-        document.querySelector('input[type="password"]');
-
-      if (!emailInput || !passwordInput) {
-        alert("فیلد ایمیل یا رمز عبور پیدا نشد.");
-        console.error("email/password input not found");
-        return;
-      }
-
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-
-      if (!email || !password) {
-        alert("ایمیل و رمز عبور را وارد کنید.");
-        return;
-      }
-
-      if (!window.supabase) {
-        alert("کتابخانه Supabase لود نشده است.");
-        console.error("window.supabase is not available");
-        return;
-      }
-
-      if (!window.atlasClient) {
-       window.atlasClient = window.supabase.createClient(
-       window.SUPABASE_URL,
-       window.SUPABASE_ANON_KEY
-        );
-      }
-
-      const { data, error } = await window.atlasClient.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        console.error("Login error:", error);
-        alert("ورود ناموفق: " + error.message);
-        return;
-      }
-
-      console.log("Login success:", data);
-      alert("ورود موفق بود.");
-
-      // اگر بعد از ورود باید صفحه چت نمایش داده شود، اینجا فعالش کن
-      const authBox = document.getElementById("authBox");
-      const chatBox = document.getElementById("chatBox");
-      const appShell = document.querySelector(".app-shell");
-
-      if (authBox) authBox.style.display = "none";
-      if (chatBox) chatBox.style.display = "block";
-      if (appShell) appShell.classList.add("logged-in");
-
+      ...
     } catch (err) {
       console.error("Unexpected login error:", err);
       alert("خطای غیرمنتظره هنگام ورود.");
