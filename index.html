@@ -876,11 +876,18 @@ async function send() {
       body: { message: message }
     });
 
-    if (error) {
-      console.error("Edge Function Error:", error);
-      addMsg("خطایی در پردازش پیام رخ داد: " + error.message, "bot");
-      return;
-    }
+console.error("Edge Function Error full:", error);
+console.log("error.message =", error?.message);
+console.log("error.name =", error?.name);
+console.log("error.context =", error?.context);
+console.log("error.status =", error?.status);
+console.log("error.details =", error?.details);
+
+addMsg(
+  "خطایی در پردازش پیام رخ داد: " +
+  (error?.message || "unknown error"),
+  "bot"
+);
 
     if (data && data.reply) {
       addMsg(data.reply, "bot");
@@ -901,38 +908,39 @@ async function send() {
 window.send = send;
 
 async function saveMsg(userText, botReply) {
-    try {
-        // ۱. دریافت اطلاعات کاربر لاگین شده
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        // اگر کاربر لاگین نکرده باشد، پیام ذخیره نمی‌شود (می‌توانید این شرط را بردارید)
-        if (!user) {
-            console.warn("کاربر لاگین نیست، پیام فقط نمایش داده می‌شود و ذخیره نمی‌شود.");
-            return;
-        }
+  try {
+    const client = getAtlasSafeClient();
+    if (!client) return;
 
-        // ۲. درج اطلاعات در جدول messages
-        const { data, error } = await supabase
-            .from('messages')
-            .insert([
-                {
-                    user_id: user.id,               // آی‌دی کاربر
-                    content: userText,              // متن پیام کاربر
-                    reply: botReply,                // متن پاسخ هوش مصنوعی
-                    conversation_id: currentConversationId, // آی‌دی یکتای این گفتگو
-                    created_at: new Date().toISOString()
-                }
-            ]);
-
-        if (error) {
-            // اگر با خطای RLS مواجه شدید، یعنی پالیسی Insert را در سوپابیس ننوشته‌اید
-            console.error("خطا در ذخیره دیتابیس:", error.message);
-        } else {
-            console.log("پیام با موفقیت در دیتابیس ذخیره شد.");
-        }
-    } catch (e) {
-        console.error("خطای غیرمنتظره در تابع saveMsg:", e);
+    const { data: { user }, error: userError } = await client.auth.getUser();
+    if (userError) {
+      console.error("خطا در گرفتن کاربر:", userError);
+      return;
     }
+
+    if (!user) {
+      console.warn("کاربر لاگین نیست، پیام ذخیره نمی‌شود.");
+      return;
+    }
+
+    const { error } = await client.from("messages").insert([
+      {
+        user_id: user.id,
+        content: userText,
+        reply: botReply,
+        conversation_id: window.currentConversationId || null,
+        created_at: new Date().toISOString()
+      }
+    ]);
+
+    if (error) {
+      console.error("خطا در ذخیره دیتابیس:", error);
+    } else {
+      console.log("پیام ذخیره شد.");
+    }
+  } catch (e) {
+    console.error("خطای غیرمنتظره در saveMsg:", e);
+  }
 }
 
 // اگر بخواهید با زدن دکمه New Chat، گفتگو عوض شود:
