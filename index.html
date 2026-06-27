@@ -622,35 +622,39 @@
   </div>
   
  <script>
-    const SUPABASE_URL = "https://atjzqpaxdyywdwidyyvz.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0anpxcGF4ZHl5d2R3aWR5eXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MTgzNzYsImV4cCI6MjA5NzQ5NDM3Nn0.xfUqnGj4rByYD3ujeSNQpxpczhNZ2453FrWJ7IeY_3A";
-    
-    let atlasSafeClient = null;
+const SUPABASE_URL = "https://atjzqpaxdyywdwidyvvz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0anpxcGF4ZHl5d2R3aWR5eXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MTgzNzYsImV4cCI6MjA5NzQ5NDM3Nn0.xfUqnGj4rByYD3ujeSNQpxpczhNZ2453FrWJ7IeY_3A";
 
-    window.user = null;
-    window.currentUser = null;
+let atlasClient = null;
 
-    function getSafeSupabaseConfig() {
-      return {
-        url: SUPABASE_URL,
-        key: SUPABASE_ANON_KEY
-      };
-    }
+function getAtlasSafeClient() {
+  if (atlasClient) return atlasClient;
 
-    function getAtlasSafeClient() {
-      if (atlasSafeClient) return atlasSafeClient;
+  if (!window.supabase || typeof window.supabase.createClient !== "function") {
+    throw new Error("Supabase library is not loaded correctly.");
+  }
 
-      if (!window.supabase || !window.supabase.createClient) {
-        console.error("Supabase library is not loaded.");
-        return null;
-      }
+  if (!SUPABASE_URL) {
+    throw new Error("SUPABASE_URL is missing.");
+  }
 
-      const cfg = getSafeSupabaseConfig();
-      atlasSafeClient = window.supabase.createClient(cfg.url, cfg.key);
-      window.atlasSafeClient = atlasSafeClient;
+  if (!SUPABASE_ANON_KEY) {
+    throw new Error("SUPABASE_ANON_KEY is missing.");
+  }
 
-      return atlasSafeClient;
-    }
+  if (SUPABASE_ANON_KEY.split(".").length !== 3) {
+    throw new Error("SUPABASE_ANON_KEY is not a valid JWT-like anon key.");
+  }
+
+  atlasClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
+
+  window.atlasClient = atlasClient;
+
+  return atlasClient;
+}
 
     function showAppAfterLogin() {
       const auth = document.getElementById("auth");
