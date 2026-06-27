@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿﻿﻿<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
   <meta name="google-site-verification" content="HTvYztTztqEIahskEYErq7mh0QlDY19aKHCwZKlEzl0" />
@@ -858,61 +858,25 @@ function getAtlasSafeClient() {
     window.loadHistory = loadHistory;
 
     // تابع اصلی برای ارسال پیام
-async function send() {
-  const input = document.getElementById("msgInput");
-  if (!input) return;
+async function sendMessage(message) {
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ message }),
+  });
 
-  const message = input.value.trim();
-  if (!message) return;
+  const data = await response.json();
 
-  addMsg(message, "user");
-  input.value = "";
-
-  try {
-    const client = getAtlasSafeClient();
-
-    if (!client) {
-      addMsg("اتصال به Supabase برقرار نیست.", "bot");
-      return;
-    }
-const { data, error } = await client.functions.invoke("atlas_chat", {
-  body: { message }
-});
-
-console.log("Sending to atlas_chat:", { message });
-
-if (error) {
-  console.error("Edge Function Error full:", error);
-  console.log("error.message =", error?.message);
-  console.log("error.name =", error?.name);
-  console.log("error.context =", error?.context);
-  console.log("error.status =", error?.status);
-  console.log("error.details =", error?.details);
-
-  addMsg(
-    "خطایی در پردازش پیام رخ داد: " + (error?.message || "unknown error"),
-    "bot"
-  );
-  return;
-}
-
-if (data && data.reply) {
-  addMsg(data.reply, "bot");
-  if (typeof saveMsg === "function") {
-    await saveMsg(message, data.reply);
+  if (!response.ok) {
+    console.error("API Error:", data);
+    throw new Error(data.error || "Request failed");
   }
-} else {
-  console.error("Invalid response:", data);
-  addMsg("پاسخی دریافت نشد.", "bot");
+
+  return data.reply;
 }
 
-  } catch (err) {
-    console.error("System Error:", err);
-    addMsg("خطای سیستمی رخ داد.", "bot");
-  }
-}
-
-window.send = send;
 
 async function saveMsg(userText, botReply) {
   try {
