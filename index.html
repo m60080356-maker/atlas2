@@ -871,36 +871,37 @@ async function send() {
       addMsg("اتصال به Supabase برقرار نیست.", "bot");
       return;
     }
+const { data, error } = await client.functions.invoke("atlas_chat", {
+  body: { message }
+});
 
-    const { data, error } = await client.functions.invoke("atlas_chat", {
-      body: { message: message }
-    });
+console.log("Sending to atlas_chat:", { message });
 
-    console.log("Sending to atlas_chat:", { message });
+if (error) {
+  console.error("Edge Function Error full:", error);
+  console.log("error.message =", error?.message);
+  console.log("error.name =", error?.name);
+  console.log("error.context =", error?.context);
+  console.log("error.status =", error?.status);
+  console.log("error.details =", error?.details);
 
-console.error("Edge Function Error full:", error);
-console.log("error.message =", error?.message);
-console.log("error.name =", error?.name);
-console.log("error.context =", error?.context);
-console.log("error.status =", error?.status);
-console.log("error.details =", error?.details);
+  addMsg(
+    "خطایی در پردازش پیام رخ داد: " + (error?.message || "unknown error"),
+    "bot"
+  );
+  return;
+}
 
-addMsg(
-  "خطایی در پردازش پیام رخ داد: " +
-  (error?.message || "unknown error"),
-  "bot"
-);
+if (data && data.reply) {
+  addMsg(data.reply, "bot");
+  if (typeof saveMsg === "function") {
+    await saveMsg(message, data.reply);
+  }
+} else {
+  console.error("Invalid response:", data);
+  addMsg("پاسخی دریافت نشد.", "bot");
+}
 
-    if (data && data.reply) {
-      addMsg(data.reply, "bot");
-
-      if (typeof saveMsg === "function") {
-        await saveMsg(message, data.reply);
-      }
-    } else {
-      console.error("Invalid response:", data);
-      addMsg("پاسخی دریافت نشد.", "bot");
-    }
   } catch (err) {
     console.error("System Error:", err);
     addMsg("خطای سیستمی رخ داد.", "bot");
@@ -1276,21 +1277,5 @@ function appendMessage(role, text) {
 
   </script>
   
-<script>
-    const SUPABASE_URL = "https://atjzqpaxdyywdwidyyvz.supabase.co";
-    const SUPABASE_ANON_KEY = "...";
-  
-  window.login = async function login() {
-    console.log("login clicked");
-
-    try {
-      ...
-    } catch (err) {
-      console.error("Unexpected login error:", err);
-      alert("خطای غیرمنتظره هنگام ورود.");
-    }
-  };
-</script>
-
 </body>
 </html>
